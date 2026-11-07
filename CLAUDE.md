@@ -1,6 +1,8 @@
 # CLAUDE.md: Günlük Görevler
 
-Kişisel, çevrimdışı günlük görev uygulaması (Flutter, birincil hedef Windows). Arayüz Türkçe. Ayrıntılar `README.md`.
+Herkesin kullanabileceği, çevrimdışı günlük görev uygulaması (Flutter, birincil hedef Windows). Arayüz Türkçe. Ayrıntılar `README.md`.
+
+Uygulama genel kalır: koda kimseye özel görev, isim, rutin ya da varsayılan veri gömülmez; ilk açılışta liste boştur.
 
 ## Komutlar
 

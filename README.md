@@ -1,6 +1,6 @@
 # Günlük Görevler
 
-Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Kişisel kullanım için.
+Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Herkesin kendi görevleriyle kullanabileceği genel bir uygulama: içinde kimseye özel görev, ayar ya da veri gelmez; ilk açılışta liste boştur.
 
 ## Ne yapar
 
