@@ -1,0 +1,51 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gunluk_gorevler/src/app/task_controller.dart';
+import 'package:gunluk_gorevler/src/domain/local_date.dart';
+import 'package:gunluk_gorevler/src/storage/file_task_store.dart';
+import 'package:gunluk_gorevler/src/ui/app.dart';
+import 'package:integration_test/integration_test.dart';
+
+/// Runs the real app on the desktop with a real data file: add, tick, then
+/// start a new app instance on the same folder and see the same state.
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('a task and its tick survive a restart', (tester) async {
+    final dir = await Directory.systemTemp.createTemp('gunluk_gorevler_it');
+    addTearDown(() => dir.delete(recursive: true));
+
+    Future<TaskController> start() async {
+      final c = TaskController(store: FileTaskStore(dir.path));
+      await c.load();
+      await tester.pumpWidget(
+        GunlukGorevlerApp(key: UniqueKey(), controller: c),
+      );
+      await tester.pumpAndSettle();
+      return c;
+    }
+
+    final first = await start();
+    await tester.enterText(
+      find.byKey(const Key('quick-add-field')),
+      'Çiçekleri sula',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    final id = first.data.tasks.single.id;
+    await tester.tap(find.byKey(Key('task-check-$id')));
+    await tester.pumpAndSettle();
+    await first.saved;
+
+    final file = File('${dir.path}${Platform.pathSeparator}gorevler.json');
+    expect(await file.exists(), isTrue);
+    expect(await file.readAsString(), contains('Çiçekleri sula'));
+
+    final second = await start();
+    expect(second.data.tasks.single.title, 'Çiçekleri sula');
+    expect(second.data.isDone(id, LocalDate.of(DateTime.now())), isTrue);
+    expect(find.text('Hepsi tamam: 1 / 1'), findsOneWidget);
+  });
+}
