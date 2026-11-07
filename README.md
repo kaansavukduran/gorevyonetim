@@ -1,6 +1,6 @@
 # Günlük Görevler
 
-Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Herkesin kendi görevleriyle kullanabileceği genel bir uygulama: içinde kimseye özel görev, ayar ya da veri gelmez; ilk açılışta liste boştur.
+Windows, macOS ve Linux için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Herkesin kendi görevleriyle kullanabileceği genel bir uygulama: içinde kimseye özel görev, ayar ya da veri gelmez; ilk açılışta liste boştur.
 
 ## Ne yapar
 
@@ -21,7 +21,13 @@ Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+
 
 ## İndirme
 
-Deponun Releases sayfasındaki **son-surum** ön sürümü: `Gunluk-Gorevler-Kurulum.exe` (kurulum) ya da `Gunluk-Gorevler-portable.zip` (açıp `gunluk_gorevler.exe`). İmzasız olduğu için Windows SmartScreen "Ek bilgi → Yine de çalıştır" isteyebilir. Exe, `.github/workflows/windows.yml` ile GitHub'ın Windows makinesinde derlenir; her push'ta testler orada da Windows üzerinde koşar ve son-surum yenilenir. Kurulum dili Türkçe (`packaging/gunluk_gorevler.iss`).
+Deponun Releases sayfasındaki **son-surum** ön sürümü:
+
+- **Windows:** `Gunluk-Gorevler-Windows-Kurulum.exe` (kurulum, Türkçe) ya da `Gunluk-Gorevler-Windows-portable.zip` (açıp `gunluk_gorevler.exe`). SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır. Veri: `%APPDATA%\GunlukGorevler`.
+- **macOS:** `Gunluk-Gorevler-macOS.dmg` (uygulamayı Applications'a sürükle). İmzasız: ilk açılışta sağ tık → Aç → Aç; olmazsa Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç. Veri: uygulamanın kendi kapsayıcısında (`~/Library/Containers/com.gunlukgorevler.gunlukGorevler`).
+- **Linux (x64):** `Gunluk-Gorevler-linux-x64.tar.gz` (açıp `./bundle/gunluk_gorevler` ya da `./install.sh` ile menüye kur). GTK 3 gerekir. Veri: `~/.local/share/gunluk_gorevler`.
+
+Her sürüm kendi işletim sisteminde, GitHub'ın makinelerinde derlenir (`.github/workflows/release.yml`); testler üçünde de koşar, her uygulama bir kez açılıp kontrol edilir ve son-surum her push'ta yenilenir. Hiçbir dosya imzalı değil.
 
 ## Geliştirme
 

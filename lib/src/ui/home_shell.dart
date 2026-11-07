@@ -89,7 +89,7 @@ class _HomeShellState extends State<HomeShell> {
         if (!controller.store.persistent)
           const _Banner(
             icon: Icons.info_outline_rounded,
-            text: 'Tarayıcı önizlemesi: görevler kaydedilmez. Uygulama Windows için yapıldı.',
+            text: 'Tarayıcı önizlemesi: görevler kaydedilmez. Uygulama masaüstü için yapıldı (Windows, macOS, Linux).',
           ),
         if (controller.saveError != null)
           _Banner(

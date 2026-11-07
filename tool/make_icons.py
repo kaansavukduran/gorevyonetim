@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Draws the app icon (a green rounded square with a white tick) and writes
-the Windows .ico and the web icons. Run from the app folder:
+the Windows .ico, the macOS app icons, the Linux icon and the web icons. Run from the app folder:
     python3 tool/make_icons.py
 Needs Pillow. The output files are committed; this script is how they were made."""
 from pathlib import Path
@@ -12,9 +12,15 @@ LIGHT = (164, 242, 224, 255)
 WHITE = (255, 255, 255, 255)
 
 
-def icon(size: int, maskable: bool = False) -> Image.Image:
+def icon(size: int, maskable: bool = False, margin: float = 0.0) -> Image.Image:
     scale = 4  # draw large, then shrink for smooth edges
     s = size * scale
+    if margin:
+        inner = icon(round(size * (1 - 2 * margin)))
+        canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        off = (size - inner.width) // 2
+        canvas.paste(inner, (off, off), inner)
+        return canvas
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     if maskable:
@@ -46,6 +52,11 @@ def main() -> None:
     icon(192).save(root / "web/icons/Icon-192.png")
     icon(512).save(root / "web/icons/Icon-512.png")
     icon(192, maskable=True).save(root / "web/icons/Icon-maskable-192.png")
+    # macOS icons leave a transparent margin like other Mac apps.
+    mac = root / "macos/Runner/Assets.xcassets/AppIcon.appiconset"
+    for n in (16, 32, 64, 128, 256, 512, 1024):
+        icon(n, margin=0.09).save(mac / f"app_icon_{n}.png")
+    icon(256).save(root / "packaging/linux/gunluk-gorevler.png")
     icon(512, maskable=True).save(root / "web/icons/Icon-maskable-512.png")
 
 

@@ -1,0 +1,10 @@
+Günlük Görevler (Linux, x64)
+
+Kurmadan aç:   ./bundle/gunluk_gorevler
+Menüye kur:    ./install.sh          (yönetici izni gerekmez)
+Kaldır:        ./install.sh --kaldir
+
+Gerekenler: GTK 3 (çoğu masaüstünde zaten kurulu). Ubuntu 22.04 ve sonrası,
+Debian 12 ve sonrası, Fedora 36 ve sonrası gibi dağıtımlarda çalışır.
+Görevler ~/.local/share/gunluk_gorevler/gorevler.json dosyasında saklanır;
+internete hiçbir şey gönderilmez.

@@ -1,6 +1,6 @@
 # CLAUDE.md: Günlük Görevler
 
-Herkesin kullanabileceği, çevrimdışı günlük görev uygulaması (Flutter, birincil hedef Windows). Arayüz Türkçe. Ayrıntılar `README.md`.
+Herkesin kullanabileceği, çevrimdışı günlük görev uygulaması (Flutter; Windows, macOS, Linux). Arayüz Türkçe. Ayrıntılar `README.md`.
 
 Uygulama genel kalır: koda kimseye özel görev, isim, rutin ya da varsayılan veri gömülmez; ilk açılışta liste boştur.
 
@@ -13,7 +13,7 @@ xvfb-run -a flutter test integration_test -d linux      # gerçek dosya, yeniden
 flutter build linux --release && xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke
 ```
 
-Windows exe yalnızca Windows'ta derlenir: `.github/workflows/windows.yml` (testler Windows'ta da koşar, kurulum ve portable ZIP `son-surum` ön sürümüne konur). Burada derlenmiş gibi gösterme.
+Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler üç sistemde de koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz `son-surum` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
 
 ## Kurallar (bozma)
 
