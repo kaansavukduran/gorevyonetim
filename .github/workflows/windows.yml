@@ -1,0 +1,80 @@
+name: windows
+
+# Günlük Görevler on a Windows host: runs the tests on
+# Windows, builds the release exe, packs a portable ZIP and a Setup.exe,
+# starts the exe once, and publishes both as the pre-release
+# "son-surum" (replaced by every run). Not signed.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+
+env:
+  FLUTTER_VERSION: "3.47.6"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Test on Windows
+        shell: bash
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter analyze
+          flutter test
+      - name: Build
+        shell: bash
+        run: flutter build windows --release --dart-define=APP_VERSION=1.0.0+${{ github.run_number }}
+      - name: Portable ZIP
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/windows/x64/runner/Release dist/Gunluk-Gorevler -Recurse
+          Set-Content -Encoding utf8 dist/Gunluk-Gorevler/OKU-BENI.txt "gunluk_gorevler.exe dosyasina cift tikla. Gorevler %APPDATA%\GunlukGorevler\gorevler.json dosyasinda saklanir; bu klasoru silmek gorevleri silmez."
+          Compress-Archive -Path dist/Gunluk-Gorevler -DestinationPath dist/Gunluk-Gorevler-portable.zip
+      - name: Installer
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" packaging/gunluk_gorevler.iss
+      - name: Check the executable starts and writes nothing before a change
+        shell: pwsh
+        run: |
+          $env:GUNLUK_GOREVLER_DIR = "$env:RUNNER_TEMP\gg-start-check"
+          $p = Start-Process -FilePath "build/windows/x64/runner/Release/gunluk_gorevler.exe" -PassThru
+          Start-Sleep -Seconds 10
+          if ($p.HasExited) { throw "gunluk_gorevler.exe exited early with code $($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+          if (Test-Path "$env:GUNLUK_GOREVLER_DIR\gorevler.json") { throw "a data file was written without any change" }
+      - name: Checksums
+        shell: pwsh
+        run: |
+          Get-FileHash dist/Gunluk-Gorevler-Kurulum.exe, dist/Gunluk-Gorevler-portable.zip -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } |
+            Set-Content -Encoding ascii dist/SHA256SUMS.txt
+          Get-Content dist/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gunluk-Gorevler-windows
+          path: |
+            dist/Gunluk-Gorevler-Kurulum.exe
+            dist/Gunluk-Gorevler-portable.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+      - name: Publish the download
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete son-surum --yes --cleanup-tag || true
+          gh release create son-surum dist/Gunluk-Gorevler-Kurulum.exe dist/Gunluk-Gorevler-portable.zip dist/SHA256SUMS.txt \
+            --prerelease --target "${{ github.sha }}" --title "Günlük Görevler (Windows)" \
+            --notes "Built from ${{ github.sha }}. Gunluk-Gorevler-Kurulum.exe kurar (Başlat menüsü, isteğe bağlı masaüstü kısayolu); portable ZIP açılıp gunluk_gorevler.exe ile çalışır. Görevler %APPDATA%\\GunlukGorevler içinde saklanır, internete gönderilmez. İmzasız: Windows SmartScreen 'Ek bilgi' → 'Yine de çalıştır' isteyebilir."

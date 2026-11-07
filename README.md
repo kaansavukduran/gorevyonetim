@@ -1,6 +1,6 @@
 # Günlük Görevler
 
-Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Human OS'tan ayrı, küçük bir uygulama (karar: `project_state/DECISIONS.md` D-023).
+Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Kişisel kullanım için; depo gizli.
 
 ## Ne yapar
 
@@ -21,16 +21,16 @@ Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+
 
 ## İndirme
 
-GitHub deposunun Releases sayfasındaki **gunluk-gorevler** ön sürümü: `Gunluk-Gorevler-Kurulum.exe` (kurulum) ya da `Gunluk-Gorevler-portable.zip` (açıp `gunluk_gorevler.exe`). İmzasız olduğu için Windows SmartScreen "Ek bilgi → Yine de çalıştır" isteyebilir. Exe, `.github/workflows/gunluk-gorevler-windows.yml` ile GitHub'ın Windows makinesinde derlenir; testler orada da Windows üzerinde koşar.
+Deponun Releases sayfasındaki **son-surum** ön sürümü: `Gunluk-Gorevler-Kurulum.exe` (kurulum) ya da `Gunluk-Gorevler-portable.zip` (açıp `gunluk_gorevler.exe`). İmzasız olduğu için Windows SmartScreen "Ek bilgi → Yine de çalıştır" isteyebilir. Exe, `.github/workflows/windows.yml` ile GitHub'ın Windows makinesinde derlenir; her push'ta testler orada da Windows üzerinde koşar ve son-surum yenilenir. Kurulum dili Türkçe (`packaging/gunluk_gorevler.iss`).
 
 ## Geliştirme
 
 ```bash
-export PATH=/opt/toolchains/flutter/bin:$PATH
-cd gunluk_gorevler
+export PATH=/opt/toolchains/flutter/bin:$PATH   # Flutter 3.47.6 / Dart 3.13.5
 flutter pub get && dart format --set-exit-if-changed . && flutter analyze && flutter test
 xvfb-run -a flutter test integration_test -d linux   # gerçek dosya, yeniden açılış
 flutter build linux --release                         # Windows exe yalnızca Windows'ta derlenir
+xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke   # fare/klavye ile duman testi
 ```
 
 `GUNLUK_GOREVLER_DIR` ortam değişkeni veri klasörünü değiştirir (test ve deneme için).
