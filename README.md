@@ -1,6 +1,6 @@
 # Günlük Görevler
 
-Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Kişisel kullanım için; depo gizli.
+Windows için her gün tik atılan görev listesi (Google Tasks / Todoist mantığında, tamamen çevrimdışı). Kişisel kullanım için.
 
 ## Ne yapar
 
