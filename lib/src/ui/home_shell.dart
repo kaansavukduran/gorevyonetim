@@ -115,7 +115,7 @@ class _HomeShellState extends State<HomeShell> {
           const SizedBox(width: 8),
         ],
       ),
-      floatingActionButton: _tab == 2
+      floatingActionButton: _tab != 1
           ? null
           : FloatingActionButton.extended(
               key: const Key('new-task-fab'),
@@ -204,6 +204,24 @@ class _HomeShellState extends State<HomeShell> {
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               SelectableText(store.location, key: const Key('about-location')),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  key: const Key('about-open-folder'),
+                  icon: const Icon(Icons.folder_open_rounded, size: 18),
+                  label: const Text('Klasörü aç'),
+                  onPressed: () async {
+                    final ok = await store.revealLocation();
+                    if (!ok && context.mounted) {
+                      showUndoSnack(
+                        context,
+                        'Klasör açılamadı. Yukarıdaki yolu seçip kopyalayabilirsin.',
+                      );
+                    }
+                  },
+                ),
+              ),
               if (store.backupLocation != null) ...[
                 const SizedBox(height: 8),
                 const Text(

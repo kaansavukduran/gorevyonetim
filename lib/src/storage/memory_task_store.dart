@@ -46,6 +46,9 @@ class MemoryTaskStore implements TaskStore {
   }
 
   @override
+  Future<bool> revealLocation() async => false;
+
+  @override
   Future<String> setAsideUnreadable({required DateTime now}) async {
     saved = null;
     return 'bellek';

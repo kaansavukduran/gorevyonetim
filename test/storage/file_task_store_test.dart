@@ -162,4 +162,31 @@ void main() {
       );
     });
   });
+
+  test(
+    'revealLocation opens the data folder with the system program',
+    () async {
+      final dir = await Directory.systemTemp.createTemp(
+        'gunluk_gorevler_reveal',
+      );
+      addTearDown(() => dir.delete(recursive: true));
+      final store = FileTaskStore('${dir.path}${Platform.pathSeparator}veri');
+      final calls = <List<String>>[];
+      store.runProcess = (program, args) async {
+        calls.add([program, ...args]);
+        return ProcessResult(0, 0, '', '');
+      };
+      expect(await store.revealLocation(), isTrue);
+      expect(calls.single.last, store.directory);
+      expect(calls.single.first, switch (Platform.operatingSystem) {
+        'windows' => 'explorer',
+        'macos' => 'open',
+        _ => 'xdg-open',
+      });
+      expect(await Directory(store.directory).exists(), isTrue);
+
+      store.runProcess = (_, _) async => throw const ProcessException('x', []);
+      expect(await store.revealLocation(), isFalse);
+    },
+  );
 }

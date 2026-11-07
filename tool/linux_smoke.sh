@@ -32,13 +32,13 @@ import -window root "$OUT/1-first-start.png"
 if [ -e "$DATA/gorevler.json" ]; then echo "FAIL: first start wrote a file"; exit 1; fi
 echo "PASS: first start wrote nothing"
 
-# Empty list: the quick-add field sits at y=190 (no summary line yet).
-xdotool mousemove 600 190 click 1
+# The quick-add field sits under the week strip.
+xdotool mousemove 520 256 click 1
 sleep 0.5
 xdotool type --delay 40 "Su ic"
 xdotool key Return
 sleep 1.5
-xdotool mousemove 258 392 click 1
+xdotool mousemove 290 409 click 1
 sleep 1.5
 import -window root "$OUT/2-added-and-ticked.png"
 stop_app

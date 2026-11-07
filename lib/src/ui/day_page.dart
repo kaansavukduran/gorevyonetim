@@ -10,7 +10,7 @@ import 'status_style.dart';
 import 'task_actions.dart';
 import 'task_editor.dart';
 
-/// One day's list: tick what is done, add tasks, move between days.
+/// One day's list: the week at the top, a field to add, the tasks to tick.
 class DayPage extends StatelessWidget {
   const DayPage({
     super.key,
@@ -40,28 +40,29 @@ class DayPage extends StatelessWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 820),
+        constraints: const BoxConstraints(maxWidth: 760),
         child: CustomScrollView(
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: SliverList.list(
                 children: [
-                  _DayHeader(
+                  _DayTitle(day: day, today: today, onDayChanged: onDayChanged),
+                  const SizedBox(height: 12),
+                  _WeekStrip(
+                    controller: controller,
                     day: day,
-                    today: today,
                     onDayChanged: onDayChanged,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
+                  _QuickAdd(controller: controller, day: day),
+                  const SizedBox(height: 16),
                   _DaySummary(
                     day: day,
                     today: today,
                     total: tasks.length,
                     done: done.length,
                   ),
-                  const SizedBox(height: 16),
-                  _QuickAdd(controller: controller, day: day),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -91,7 +92,7 @@ class DayPage extends StatelessWidget {
                     TaskTile(controller: controller, task: done[i], day: day),
               ),
             ],
-            const SliverToBoxAdapter(child: SizedBox(height: 96)),
+            const SliverToBoxAdapter(child: SizedBox(height: 48)),
           ],
         ),
       ),
@@ -99,21 +100,20 @@ class DayPage extends StatelessWidget {
   }
 
   Widget _sectionHeader(BuildContext context, String text) => SliverPadding(
-    padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+    padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
     sliver: SliverToBoxAdapter(
       child: Text(
         text,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          letterSpacing: 0.4,
-        ),
+        style: Theme.of(context).textTheme.labelLarge
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     ),
   );
 }
 
-class _DayHeader extends StatelessWidget {
-  const _DayHeader({
+/// "Bugün" / weekday, the date (click to pick another), and a way back.
+class _DayTitle extends StatelessWidget {
+  const _DayTitle({
     required this.day,
     required this.today,
     required this.onDayChanged,
@@ -126,67 +126,203 @@ class _DayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isToday = day == today;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                relativeDay(day, today),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              InkWell(
+                key: const Key('day-title'),
+                borderRadius: BorderRadius.circular(8),
+                onTap: () async {
+                  final picked = await pickDate(
+                    context,
+                    initial: day,
+                    help: 'Gün seç',
+                  );
+                  if (picked != null) onDayChanged(picked);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${longDate(day)}, ${weekdayName(day)}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (day != today)
+          TextButton.icon(
+            key: const Key('day-today'),
+            icon: const Icon(Icons.today_rounded, size: 18),
+            label: const Text('Bugüne dön'),
+            onPressed: () => onDayChanged(today),
+          ),
+      ],
+    );
+  }
+}
+
+/// The week (Monday to Sunday) of the shown day: click a day to open it.
+/// Each day shows how much of it is done, so the week is checked at a glance.
+class _WeekStrip extends StatelessWidget {
+  const _WeekStrip({
+    required this.controller,
+    required this.day,
+    required this.onDayChanged,
+  });
+
+  final TaskController controller;
+  final LocalDate day;
+  final ValueChanged<LocalDate> onDayChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final monday = day.addDays(1 - day.weekday);
     return Row(
       children: [
-        IconButton.outlined(
-          key: const Key('day-prev'),
-          tooltip: 'Önceki gün (Alt + ←)',
+        IconButton(
+          key: const Key('week-prev'),
+          tooltip: 'Önceki hafta',
           icon: const Icon(Icons.chevron_left_rounded),
-          onPressed: () => onDayChanged(day.addDays(-1)),
+          onPressed: () => onDayChanged(day.addDays(-7)),
         ),
-        const SizedBox(width: 8),
-        Expanded(
+        for (var i = 0; i < 7; i++)
+          Expanded(
+            child: _DayPill(
+              controller: controller,
+              date: monday.addDays(i),
+              selected: monday.addDays(i) == day,
+              onTap: () => onDayChanged(monday.addDays(i)),
+            ),
+          ),
+        IconButton(
+          key: const Key('week-next'),
+          tooltip: 'Sonraki hafta',
+          icon: const Icon(Icons.chevron_right_rounded),
+          onPressed: () => onDayChanged(day.addDays(7)),
+        ),
+      ],
+    );
+  }
+}
+
+class _DayPill extends StatelessWidget {
+  const _DayPill({
+    required this.controller,
+    required this.date,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final TaskController controller;
+  final LocalDate date;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final data = controller.data;
+    final today = controller.today;
+    final tasks = data.tasksOn(date);
+    final done = tasks.where((t) => data.isDone(t.id, date)).length;
+    final isToday = date == today;
+    final future = date.isAfter(today);
+
+    final String tip;
+    if (tasks.isEmpty) {
+      tip = '${shortDate(date)}: görev yok';
+    } else if (future) {
+      tip = '${shortDate(date)}: ${tasks.length} görev planlı';
+    } else {
+      tip = '${shortDate(date)}: ${tasks.length} görevden $done tanesi yapıldı';
+    }
+
+    final Widget mark;
+    if (tasks.isEmpty || future) {
+      mark = const SizedBox(height: 14);
+    } else if (done == tasks.length) {
+      mark = Icon(Icons.check_rounded, size: 14, color: scheme.primary);
+    } else {
+      mark = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: LinearProgressIndicator(
+            value: done / tasks.length,
+            minHeight: 4,
+            color: date.isBefore(today) ? scheme.error : scheme.primary,
+            backgroundColor: scheme.surfaceContainerHighest,
+          ),
+        ),
+      );
+    }
+
+    return Tooltip(
+      message: tip,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Material(
+          color: selected ? scheme.primaryContainer : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
           child: InkWell(
-            key: const Key('day-title'),
-            borderRadius: BorderRadius.circular(12),
-            onTap: () async {
-              final picked = await pickDate(
-                context,
-                initial: day,
-                help: 'Gün seç',
-              );
-              if (picked != null) onDayChanged(picked);
-            },
+            key: Key('week-day-${date.toIso()}'),
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    relativeDay(day, today),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    weekdayShort[date.weekday - 1],
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: selected
+                          ? scheme.onPrimaryContainer
+                          : scheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    '${longDate(day)}, ${weekdayName(day)}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    '${date.day}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                      color: isToday
+                          ? scheme.primary
+                          : (selected ? scheme.onPrimaryContainer : null),
+                      decoration: isToday ? TextDecoration.underline : null,
+                      decorationColor: scheme.primary,
                     ),
                   ),
+                  mark,
                 ],
               ),
             ),
           ),
         ),
-        if (!isToday)
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton.icon(
-              key: const Key('day-today'),
-              icon: const Icon(Icons.today_rounded),
-              label: const Text('Bugün'),
-              onPressed: () => onDayChanged(today),
-            ),
-          ),
-        IconButton.outlined(
-          key: const Key('day-next'),
-          tooltip: 'Sonraki gün (Alt + →)',
-          icon: const Icon(Icons.chevron_right_rounded),
-          onPressed: () => onDayChanged(day.addDays(1)),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -208,11 +344,37 @@ class _DaySummary extends StatelessWidget {
   Widget build(BuildContext context) {
     if (total == 0) return const SizedBox.shrink();
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    if (!day.isAfter(today) && done == total) {
+      return Container(
+        key: const Key('day-all-done'),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: scheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                day == today
+                    ? 'Bugünün hepsi tamam: $total / $total'
+                    : 'O günün hepsi yapılmış: $total / $total',
+                key: const Key('day-summary'),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: scheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     final String text;
     if (day.isAfter(today)) {
       text = '$total görev planlı';
-    } else if (done == total) {
-      text = 'Hepsi tamam: $total / $total';
     } else if (day.isBefore(today)) {
       text =
           '$total görevden $done tanesi yapıldı, ${total - done} tanesi yapılmadı';
@@ -225,17 +387,19 @@ class _DaySummary extends StatelessWidget {
         Text(
           text,
           key: const Key('day-summary'),
-          style: theme.textTheme.titleMedium,
+          style: theme.textTheme.titleSmall,
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: day.isAfter(today) ? 0 : done / total,
-            minHeight: 8,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        if (!day.isAfter(today)) ...[
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: done / total,
+              minHeight: 6,
+              backgroundColor: scheme.surfaceContainerHighest,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -271,6 +435,12 @@ class _QuickAddState extends State<_QuickAdd> {
     _QuickRepeat.once => OnceRule(widget.day),
   };
 
+  String _label(_QuickRepeat r) => switch (r) {
+    _QuickRepeat.daily => 'Her gün',
+    _QuickRepeat.weekdays => 'Hafta içi',
+    _QuickRepeat.once => 'Sadece ${shortDate(widget.day)}',
+  };
+
   void _add() {
     final title = _text.text.trim();
     if (title.isEmpty) return;
@@ -279,81 +449,108 @@ class _QuickAddState extends State<_QuickAdd> {
     _focus.requestFocus();
   }
 
+  Future<void> _details() async {
+    await addTaskWithEditor(
+      context,
+      widget.controller,
+      start: widget.day,
+      initialTitle: _text.text.trim(),
+      initialRule: _rule,
+    );
+    _text.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('quick-add-field'),
-                    controller: _text,
-                    focusNode: _focus,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _add(),
-                    decoration: const InputDecoration(
-                      hintText: 'Yeni görev yaz, Enter ile ekle',
-                      prefixIcon: Icon(Icons.add_task_rounded),
-                      border: InputBorder.none,
+    final scheme = theme.colorScheme;
+    return TextField(
+      key: const Key('quick-add-field'),
+      controller: _text,
+      focusNode: _focus,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _add(),
+      decoration: InputDecoration(
+        hintText: 'Görev ekle ve Enter\'a bas',
+        filled: true,
+        fillColor: scheme.surfaceContainerLow,
+        prefixIcon: const Icon(Icons.add_rounded),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PopupMenuButton<Object>(
+                key: const Key('quick-repeat'),
+                tooltip: 'Ne sıklıkla?',
+                onSelected: (v) {
+                  if (v is _QuickRepeat) {
+                    setState(() => _repeat = v);
+                  } else {
+                    _details();
+                  }
+                },
+                itemBuilder: (_) => [
+                  for (final r in _QuickRepeat.values)
+                    CheckedPopupMenuItem<Object>(
+                      key: Key('quick-repeat-${r.name}'),
+                      value: r,
+                      checked: r == _repeat,
+                      child: Text(_label(r)),
                     ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem<Object>(
+                    key: Key('quick-details'),
+                    value: 'details',
+                    child: Text('Ayrıntılı ekle (not, belirli günler)…'),
+                  ),
+                ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.repeat_rounded,
+                        size: 18,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _label(_repeat),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
                   ),
                 ),
-                IconButton(
-                  key: const Key('quick-add-details'),
-                  tooltip: 'Ayrıntılı ekle (not, belirli günler, başlangıç)',
-                  icon: const Icon(Icons.tune_rounded),
-                  onPressed: () async {
-                    await addTaskWithEditor(
-                      context,
-                      widget.controller,
-                      start: widget.day,
-                      initialTitle: _text.text.trim(),
-                      initialRule: _rule,
-                    );
-                    _text.clear();
-                  },
-                ),
-                const SizedBox(width: 4),
-                FilledButton(
+              ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _text,
+                builder: (_, value, _) => FilledButton(
                   key: const Key('quick-add-button'),
-                  onPressed: _add,
+                  onPressed: value.text.trim().isEmpty ? null : _add,
                   child: const Text('Ekle'),
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text('Tekrar:', style: theme.textTheme.bodySmall),
-                for (final r in _QuickRepeat.values)
-                  ChoiceChip(
-                    key: Key('quick-repeat-${r.name}'),
-                    label: Text(switch (r) {
-                      _QuickRepeat.daily => 'Her gün',
-                      _QuickRepeat.weekdays => 'Hafta içi',
-                      _QuickRepeat.once => 'Sadece ${shortDate(widget.day)}',
-                    }),
-                    selected: _repeat == r,
-                    onSelected: (_) => setState(() => _repeat = r),
-                    visualDensity: VisualDensity.compact,
-                  ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -375,7 +572,7 @@ class _EmptyDay extends StatelessWidget {
         children: [
           Icon(
             Icons.checklist_rounded,
-            size: 56,
+            size: 48,
             color: theme.colorScheme.outline,
           ),
           const SizedBox(height: 12),
@@ -385,7 +582,8 @@ class _EmptyDay extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Yukarıya yazıp Enter\'a bas: görev her gün listende olur.',
+            'Yukarıya bir görev yaz, Enter\'a bas. Her gün listende olur;\n'
+            'sıklığı yandaki seçimle değiştirebilirsin.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -397,7 +595,7 @@ class _EmptyDay extends StatelessWidget {
   }
 }
 
-/// One task on one day.
+/// One task on one day. Click to tick, right-click or ⋮ for more.
 class TaskTile extends StatelessWidget {
   const TaskTile({
     super.key,
@@ -420,6 +618,7 @@ class TaskTile extends StatelessWidget {
     final done = status == DayStatus.done;
     final future = day.isAfter(today);
     final rule = task.ruleOn(day) ?? task.lastRule;
+    final streak = day == today ? data.streakFor(task, today) : 0;
 
     void toggle() {
       final before = controller.data;
@@ -435,10 +634,8 @@ class TaskTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: Card(
+      child: Material(
         key: Key('task-tile-${task.id}'),
-        elevation: 0,
-        margin: EdgeInsets.zero,
         color: done ? scheme.surfaceContainerLow : scheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -447,8 +644,10 @@ class TaskTile extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: future ? null : toggle,
+          onSecondaryTapUp: (d) =>
+              showTaskMenuAt(context, controller, task, d.globalPosition),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(6, 6, 4, 6),
+            padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
             child: Row(
               children: [
                 Tooltip(
@@ -456,13 +655,11 @@ class TaskTile extends StatelessWidget {
                       ? 'İleri bir gün işaretlenemez'
                       : (done ? 'İşareti kaldır' : 'Yapıldı olarak işaretle'),
                   child: Transform.scale(
-                    scale: 1.25,
+                    scale: 1.2,
                     child: Checkbox(
                       key: Key('task-check-${task.id}'),
                       value: done,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
+                      shape: const CircleBorder(),
                       onChanged: future ? null : (_) => toggle(),
                       semanticLabel:
                           '${task.title}: ${StatusStyle.of(status, scheme).label}',
@@ -474,14 +671,15 @@ class TaskTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        task.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 180),
+                        style: theme.textTheme.titleMedium!.copyWith(
                           decoration: done ? TextDecoration.lineThrough : null,
                           color: done
                               ? scheme.onSurfaceVariant
                               : scheme.onSurface,
                         ),
+                        child: Text(task.title),
                       ),
                       const SizedBox(height: 2),
                       _StatusLine(
@@ -494,13 +692,25 @@ class TaskTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (MediaQuery.sizeOf(context).width >= 700)
+                if (streak >= 2)
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
-                    child: WeekStrip(
-                      controller: controller,
-                      task: task,
-                      endingAt: day,
+                    child: Tooltip(
+                      message: 'Üst üste $streak gün yapıldı',
+                      child: Chip(
+                        key: Key('task-streak-${task.id}'),
+                        avatar: Icon(
+                          Icons.whatshot,
+                          size: 16,
+                          color: scheme.tertiary,
+                        ),
+                        label: Text('$streak gün'),
+                        visualDensity: VisualDensity.compact,
+                        side: BorderSide.none,
+                        backgroundColor: scheme.tertiaryContainer.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
                     ),
                   ),
                 TaskMenu(controller: controller, task: task),
@@ -580,51 +790,6 @@ class _StatusLine extends StatelessWidget {
       TextSpan(children: parts),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-    );
-  }
-}
-
-/// The seven days ending at [endingAt], oldest first.
-class WeekStrip extends StatelessWidget {
-  const WeekStrip({
-    super.key,
-    required this.controller,
-    required this.task,
-    required this.endingAt,
-  });
-
-  final TaskController controller;
-  final Task task;
-  final LocalDate endingAt;
-
-  @override
-  Widget build(BuildContext context) {
-    final data = controller.data;
-    final today = controller.today;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 6; i >= 0; i--)
-          Builder(
-            builder: (context) {
-              final d = endingAt.addDays(-i);
-              final status = data.statusOf(task, d, today);
-              return Tooltip(
-                message:
-                    '${shortDate(d)} ${weekdayName(d)}: '
-                    '${StatusStyle.of(status, Theme.of(context).colorScheme).label}',
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                  child: StatusCell(
-                    status: status,
-                    size: 16,
-                    highlight: d == today,
-                  ),
-                ),
-              );
-            },
-          ),
-      ],
     );
   }
 }

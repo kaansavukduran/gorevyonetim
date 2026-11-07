@@ -89,7 +89,7 @@ class _TasksPageState extends State<TasksPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                'Sırayı tutamaçtan sürükleyerek değiştir. Sonlandırılan görevin geçmişi kalır.',
+                'Düzenlemek için göreve tıkla, sırayı soldaki tutamaçtan sürükle. Sonlandırılan görevin geçmişi kalır.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -180,60 +180,62 @@ class _TaskCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(color: scheme.outlineVariant),
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-          child: Row(
-            children: [
-              ReorderableDragStartListener(
-                index: index,
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.grab,
-                    child: Icon(Icons.drag_indicator_rounded),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: Key('task-card-${task.id}'),
+          onTap: () => editTask(context, controller, task),
+          onSecondaryTapUp: (d) =>
+              showTaskMenuAt(context, controller, task, d.globalPosition),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+            child: Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.grab,
+                      child: Icon(Icons.drag_indicator_rounded),
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: active ? null : scheme.onSurfaceVariant,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: active ? null : scheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      [
-                        if (rule != null) describeRule(rule),
-                        state,
-                      ].join('  ·  '),
-                      style: small,
-                    ),
-                    if (task.note.isNotEmpty) Text(task.note, style: small),
-                    const SizedBox(height: 4),
-                    Text(
-                      stats.settled == 0
-                          ? 'Son 30 gün: henüz sonuçlanan gün yok'
-                          : 'Son 30 gün: ${stats.settled} günün ${stats.done} gününde yapıldı'
-                                '${stats.streak > 0 ? '  ·  seri ${stats.streak} gün' : ''}',
-                      key: Key('task-stats-${task.id}'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          if (rule != null) describeRule(rule),
+                          state,
+                        ].join('  ·  '),
+                        style: small,
                       ),
-                    ),
-                  ],
+                      if (task.note.isNotEmpty) Text(task.note, style: small),
+                      const SizedBox(height: 4),
+                      Text(
+                        stats.settled == 0
+                            ? 'Son 30 gün: henüz sonuçlanan gün yok'
+                            : 'Son 30 gün: ${stats.settled} günün ${stats.done} gününde yapıldı'
+                                  '${stats.streak > 0 ? '  ·  seri ${stats.streak} gün' : ''}',
+                        key: Key('task-stats-${task.id}'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                tooltip: 'Düzenle',
-                icon: const Icon(Icons.edit_rounded),
-                onPressed: () => editTask(context, controller, task),
-              ),
-              TaskMenu(controller: controller, task: task),
-            ],
+                TaskMenu(controller: controller, task: task),
+              ],
+            ),
           ),
         ),
       ),

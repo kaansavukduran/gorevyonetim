@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,7 +75,8 @@ void main() {
 
     await tester.tap(checkOf(id));
     await tester.pumpAndSettle();
-    expect(find.text('Hepsi tamam: 1 / 1'), findsOneWidget);
+    expect(find.text('Bugünün hepsi tamam: 1 / 1'), findsOneWidget);
+    expect(find.byKey(const Key('day-all-done')), findsOneWidget);
     expect(find.text('Tamamlananlar (1)'), findsOneWidget);
     expect(find.textContaining('10:00 işaretlendi'), findsOneWidget);
     await h.controller.saved;
@@ -91,7 +93,10 @@ void main() {
 
   testWidgets('quick add as "only this day" makes a one-off', (tester) async {
     final h = await pumpApp(tester);
+    await tester.tap(find.byKey(const Key('quick-repeat')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('quick-repeat-once')));
+    await tester.pumpAndSettle();
     await tester.pump();
     await quickAdd(tester, 'Fatura öde');
     final t = h.controller.data.tasks.single;
@@ -111,7 +116,7 @@ void main() {
       ),
     );
     final id = h.controller.data.tasks.single.id;
-    await tester.tap(find.byKey(const Key('day-prev')));
+    await tester.tap(find.byKey(const Key('week-day-2026-11-06')));
     await tester.pumpAndSettle();
     expect(find.text('Dün'), findsOneWidget);
     expect(find.textContaining('Yapılmadı'), findsOneWidget);
@@ -140,7 +145,7 @@ void main() {
       ),
     );
     final id = h.controller.data.tasks.single.id;
-    await tester.tap(find.byKey(const Key('day-next')));
+    await tester.tap(find.byKey(const Key('week-day-2026-11-08')));
     await tester.pumpAndSettle();
     expect(find.text('Yarın'), findsOneWidget);
     expect(tester.widget<Checkbox>(checkOf(id)).onChanged, isNull);
@@ -153,7 +158,9 @@ void main() {
     'the editor adds a task on chosen weekdays and checks its input',
     (tester) async {
       final h = await pumpApp(tester);
-      await tester.tap(find.byKey(const Key('new-task-fab')));
+      await tester.tap(find.byKey(const Key('quick-repeat')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('quick-details')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('editor-save')));
@@ -368,5 +375,134 @@ void main() {
     await tester.tap(find.text('Görevler'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the week strip opens a day and moves by a week', (tester) async {
+    final h = await pumpApp(
+      tester,
+      seed: (c) {
+        final t = c.addTask(
+          title: 'Su iç',
+          rule: const DailyRule(),
+          start: d('2026-11-02'),
+        );
+        c.toggle(t.id, d('2026-11-02'));
+      },
+    );
+    // Monday 2 November .. Sunday 8 November are shown.
+    expect(find.byKey(const Key('week-day-2026-11-02')), findsOneWidget);
+    expect(find.byKey(const Key('week-day-2026-11-08')), findsOneWidget);
+    expect(
+      find.byTooltip('2 Kasım: 1 görevden 1 tanesi yapıldı'),
+      findsOneWidget,
+    );
+    expect(
+      find.byTooltip('3 Kasım: 1 görevden 0 tanesi yapıldı'),
+      findsOneWidget,
+    );
+    expect(find.byTooltip('8 Kasım: 1 görev planlı'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('week-day-2026-11-03')));
+    await tester.pumpAndSettle();
+    expect(find.text('3 Kasım 2026, Salı'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('week-prev')));
+    await tester.pumpAndSettle();
+    expect(find.text('27 Ekim 2026, Salı'), findsOneWidget);
+    expect(find.byKey(const Key('week-day-2026-10-26')), findsOneWidget);
+    expect(h.controller.today, d('2026-11-07'));
+
+    await tester.tap(find.byKey(const Key('day-today')));
+    await tester.pumpAndSettle();
+    expect(find.text('7 Kasım 2026, Cumartesi'), findsOneWidget);
+  });
+
+  testWidgets('Ekle is off until something is typed', (tester) async {
+    await pumpApp(tester);
+    final button = find.byKey(const Key('quick-add-button'));
+    expect(tester.widget<FilledButton>(button).onPressed, isNull);
+    await tester.enterText(find.byKey(const Key('quick-add-field')), 'Yürü');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.text('Yürü'), findsOneWidget);
+    expect(tester.widget<FilledButton>(button).onPressed, isNull);
+  });
+
+  testWidgets('right-click on a task opens its menu', (tester) async {
+    final h = await pumpApp(
+      tester,
+      seed: (c) => c.addTask(
+        title: 'Su iç',
+        rule: const DailyRule(),
+        start: d('2026-11-01'),
+      ),
+    );
+    final id = h.controller.data.tasks.single.id;
+    await tester.tap(
+      find.byKey(Key('task-tile-$id')),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Düzenle'), findsOneWidget);
+    expect(find.text('Sonlandır'), findsOneWidget);
+    expect(h.controller.data.completions, isEmpty); // a right-click never ticks
+    await tester.tap(find.text('Düzenle'));
+    await tester.pumpAndSettle();
+    expect(find.text('Görevi düzenle'), findsOneWidget);
+  });
+
+  testWidgets('a streak of two or more days is shown on today', (tester) async {
+    final h = await pumpApp(
+      tester,
+      seed: (c) {
+        final t = c.addTask(
+          title: 'Su iç',
+          rule: const DailyRule(),
+          start: d('2026-11-01'),
+        );
+        c.toggle(t.id, d('2026-11-05'));
+        c.toggle(t.id, d('2026-11-06'));
+      },
+    );
+    final id = h.controller.data.tasks.single.id;
+    expect(find.byKey(Key('task-streak-$id')), findsOneWidget);
+    expect(find.text('2 gün'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('week-day-2026-11-06')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key('task-streak-$id')), findsNothing);
+  });
+
+  testWidgets('"Yeni görev" lives on Görevler; a card click edits', (
+    tester,
+  ) async {
+    final h = await pumpApp(
+      tester,
+      seed: (c) => c.addTask(
+        title: 'Su iç',
+        rule: const DailyRule(),
+        start: d('2026-11-01'),
+      ),
+    );
+    expect(find.byKey(const Key('new-task-fab')), findsNothing);
+    await tester.tap(find.text('Görevler'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('new-task-fab')), findsOneWidget);
+    final id = h.controller.data.tasks.single.id;
+    await tester.tap(find.byKey(Key('task-card-$id')));
+    await tester.pumpAndSettle();
+    expect(find.text('Görevi düzenle'), findsOneWidget);
+  });
+
+  testWidgets('the info window says when the folder cannot be opened', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.byKey(const Key('about-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('about-open-folder')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Klasör açılamadı'), findsOneWidget);
   });
 }

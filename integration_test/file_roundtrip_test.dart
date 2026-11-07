@@ -46,6 +46,6 @@ void main() {
     final second = await start();
     expect(second.data.tasks.single.title, 'Çiçekleri sula');
     expect(second.data.isDone(id, LocalDate.of(DateTime.now())), isTrue);
-    expect(find.text('Hepsi tamam: 1 / 1'), findsOneWidget);
+    expect(find.text('Bugünün hepsi tamam: 1 / 1'), findsOneWidget);
   });
 }

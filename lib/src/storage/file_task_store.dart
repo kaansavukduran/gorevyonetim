@@ -131,6 +131,27 @@ class FileTaskStore implements TaskStore {
     }
   }
 
+  /// Runs [program] with [arguments]; replaced in tests.
+  Future<ProcessResult> Function(String program, List<String> arguments)
+  runProcess = Process.run;
+
+  @override
+  Future<bool> revealLocation() async {
+    try {
+      await Directory(directory).create(recursive: true);
+      final (program, args) = switch (Platform.operatingSystem) {
+        'windows' => ('explorer', [directory]),
+        'macos' => ('open', [directory]),
+        _ => ('xdg-open', [directory]),
+      };
+      final result = await runProcess(program, args);
+      // explorer.exe reports 1 even when it opened the folder.
+      return Platform.isWindows || result.exitCode == 0;
+    } on Object {
+      return false;
+    }
+  }
+
   @override
   Future<String> setAsideUnreadable({required DateTime now}) async {
     final stamp = now

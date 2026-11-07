@@ -141,6 +141,86 @@ Future<void> deleteTask(
   );
 }
 
+/// What the task menu offers (the ⋮ button and a right-click show the same).
+List<PopupMenuEntry<String>> taskMenuItems(
+  TaskController controller,
+  Task task,
+) {
+  final ended = task.isEndedOn(controller.today);
+  return [
+    const PopupMenuItem(
+      value: 'edit',
+      child: ListTile(
+        leading: Icon(Icons.edit_rounded),
+        title: Text('Düzenle'),
+      ),
+    ),
+    if (ended)
+      const PopupMenuItem(
+        value: 'restart',
+        child: ListTile(
+          leading: Icon(Icons.play_arrow_rounded),
+          title: Text('Yeniden başlat'),
+        ),
+      )
+    else
+      PopupMenuItem(
+        value: 'end',
+        child: ListTile(
+          leading: const Icon(Icons.stop_circle_outlined),
+          title: const Text('Sonlandır'),
+          subtitle: Text(
+            '${shortDate(controller.today)} ve sonrasında görünmez',
+          ),
+        ),
+      ),
+    const PopupMenuItem(
+      value: 'delete',
+      child: ListTile(
+        leading: Icon(Icons.delete_outline_rounded),
+        title: Text('Sil'),
+      ),
+    ),
+  ];
+}
+
+void runTaskMenu(
+  BuildContext context,
+  TaskController controller,
+  Task task,
+  String? value,
+) {
+  switch (value) {
+    case 'edit':
+      editTask(context, controller, task);
+    case 'end':
+      endTask(context, controller, task);
+    case 'restart':
+      restartTask(context, controller, task);
+    case 'delete':
+      deleteTask(context, controller, task);
+  }
+}
+
+/// Opens the task menu where the mouse was right-clicked.
+Future<void> showTaskMenuAt(
+  BuildContext context,
+  TaskController controller,
+  Task task,
+  Offset globalPosition,
+) async {
+  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+  final value = await showMenu<String>(
+    context: context,
+    position: RelativeRect.fromRect(
+      globalPosition & const Size(1, 1),
+      Offset.zero & overlay.size,
+    ),
+    items: taskMenuItems(controller, task),
+  );
+  if (context.mounted) runTaskMenu(context, controller, task, value);
+}
+
 /// The ⋮ menu of a task.
 class TaskMenu extends StatelessWidget {
   const TaskMenu({super.key, required this.controller, required this.task});
@@ -149,59 +229,11 @@ class TaskMenu extends StatelessWidget {
   final Task task;
 
   @override
-  Widget build(BuildContext context) {
-    final ended = task.isEndedOn(controller.today);
-    return PopupMenuButton<String>(
-      key: Key('task-menu-${task.id}'),
-      tooltip: 'Görev seçenekleri',
-      icon: const Icon(Icons.more_vert_rounded),
-      onSelected: (value) {
-        switch (value) {
-          case 'edit':
-            editTask(context, controller, task);
-          case 'end':
-            endTask(context, controller, task);
-          case 'restart':
-            restartTask(context, controller, task);
-          case 'delete':
-            deleteTask(context, controller, task);
-        }
-      },
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'edit',
-          child: ListTile(
-            leading: Icon(Icons.edit_rounded),
-            title: Text('Düzenle'),
-          ),
-        ),
-        if (ended)
-          const PopupMenuItem(
-            value: 'restart',
-            child: ListTile(
-              leading: Icon(Icons.play_arrow_rounded),
-              title: Text('Yeniden başlat'),
-            ),
-          )
-        else
-          PopupMenuItem(
-            value: 'end',
-            child: ListTile(
-              leading: const Icon(Icons.stop_circle_outlined),
-              title: const Text('Sonlandır'),
-              subtitle: Text(
-                '${shortDate(controller.today)} ve sonrasında görünmez',
-              ),
-            ),
-          ),
-        const PopupMenuItem(
-          value: 'delete',
-          child: ListTile(
-            leading: Icon(Icons.delete_outline_rounded),
-            title: Text('Sil'),
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => PopupMenuButton<String>(
+    key: Key('task-menu-${task.id}'),
+    tooltip: 'Görev seçenekleri (sağ tık da açar)',
+    icon: const Icon(Icons.more_vert_rounded),
+    onSelected: (value) => runTaskMenu(context, controller, task, value),
+    itemBuilder: (context) => taskMenuItems(controller, task),
+  );
 }

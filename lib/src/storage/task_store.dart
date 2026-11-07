@@ -41,4 +41,8 @@ abstract class TaskStore {
   /// Moves an unreadable file aside (never deletes it) so a new list can be
   /// started. Returns where it was moved to.
   Future<String> setAsideUnreadable({required DateTime now});
+
+  /// Opens the folder that holds the data in the system's file manager.
+  /// Returns false when that is not possible here.
+  Future<bool> revealLocation();
 }
