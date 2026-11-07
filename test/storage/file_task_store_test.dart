@@ -26,13 +26,13 @@ void main() {
     test('Windows uses %APPDATA%', () {
       expect(
         defaultDataDirectory({
-          'APPDATA': r'C:\Users\kaan\AppData\Roaming',
+          'APPDATA': r'C:\Users\kullanici\AppData\Roaming',
         }, 'windows'),
-        r'C:\Users\kaan\AppData\Roaming\GunlukGorevler',
+        r'C:\Users\kullanici\AppData\Roaming\GunlukGorevler',
       );
       expect(
-        defaultDataDirectory({'USERPROFILE': r'C:\Users\kaan'}, 'windows'),
-        r'C:\Users\kaan\AppData\Roaming\GunlukGorevler',
+        defaultDataDirectory({'USERPROFILE': r'C:\Users\kullanici'}, 'windows'),
+        r'C:\Users\kullanici\AppData\Roaming\GunlukGorevler',
       );
       expect(() => defaultDataDirectory({}, 'windows'), throwsStateError);
     });
