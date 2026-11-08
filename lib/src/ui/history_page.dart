@@ -5,6 +5,7 @@ import '../domain/local_date.dart';
 import '../domain/task.dart';
 import '../domain/task_data.dart';
 import '../domain/turkish_dates.dart';
+import 'game_widgets.dart';
 import 'status_style.dart';
 
 /// A grid of tasks × days: what was done and what was not.
@@ -243,7 +244,13 @@ class _HistoryPageState extends State<HistoryPage> {
         child: InkWell(
           key: Key('cell-${task.id}-${d.toIso()}'),
           borderRadius: BorderRadius.circular(8),
-          onTap: canToggle ? () => controller.toggle(task.id, d) : null,
+          onTap: canToggle
+              ? () => withGameFeedback(
+                  context,
+                  controller,
+                  () => controller.toggle(task.id, d),
+                )
+              : null,
           child: StatusCell(status: status, size: _cell, highlight: d == today),
         ),
       ),

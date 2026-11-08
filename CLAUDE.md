@@ -20,6 +20,7 @@ Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.
 - Yalnızca bir tik "yapıldı"dır; planlı ≠ yapıldı. Görevin başlamadığı ya da sonlandırıldığı gün "yapılmadı" sayılmaz (eksik ≠ sıfır); bugün işaretlenmemişse "bekliyor"dur.
 - Geçmiş sessizce değişmez: kural değişikliği ve sonlandırma takvim dilimiyle o günden itibaren geçerlidir; geçmiş bir günü sonradan işaretlemek gerçek saatiyle "sonradan işaretlendi" der.
 - Silme tek yıkıcı işlemdir: onay ister, geri alınabilir.
-- Veri tek JSON dosyası (`%APPDATA%\GunlukGorevler`, biçim sürümü 1): geçici dosyaya yazılıp yeniden adlandırılır, günlük yedek alınır, okunamayan ya da daha yeni bir dosyanın üzerine asla yazılmaz, ilk değişiklikten önce hiçbir şey yazılmaz, hiçbir şey internete gitmez.
+- Oyunlaştırma (`lib/src/domain/game.dart`) yalnızca tik geçmişinden hesaplanır: XP, seviye, stat ya da rozet saklanmaz; sonradan işaretlenen gün bonus almaz; bilinmeyen yüzde "–" gösterilir, 0 değil. Oyun modu kapatılabilir; temalar `lib/src/ui/themes.dart`.
+- Veri tek JSON dosyası (`%APPDATA%\GunlukGorevler`, biçim sürümü 2, biçim 1 okunur; ayarlar ayrı `ayarlar.json`): geçici dosyaya yazılıp yeniden adlandırılır, günlük yedek alınır, okunamayan ya da daha yeni bir dosyanın üzerine asla yazılmaz, ilk değişiklikten önce hiçbir şey yazılmaz, hiçbir şey internete gitmez.
 - `lib/src/domain/` saf Dart kalır (Flutter, IO yok). Üçüncü taraf paket eklemeden önce lisans, bakım ve platform desteğini değerlendirip kullanıcıya sor; `pubspec.lock` commit'lenir.
 - Her davranış değişikliği test ister; testlerin hatayı gerçekten yakaladığını bir mutasyonla göster.

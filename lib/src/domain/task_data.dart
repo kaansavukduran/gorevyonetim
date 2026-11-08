@@ -51,7 +51,17 @@ class TaskData {
   TaskData({
     List<Task> tasks = const [],
     Map<String, Map<LocalDate, DateTime>> completions = const {},
-  }) : tasks = List<Task>.unmodifiable(
+    Map<String, Map<LocalDate, Set<String>>> stepTicks = const {},
+  }) : stepTicks = Map<String, Map<LocalDate, Set<String>>>.unmodifiable({
+         for (final e in stepTicks.entries)
+           if (e.value.values.any((s) => s.isNotEmpty))
+             e.key: Map<LocalDate, Set<String>>.unmodifiable({
+               for (final d in e.value.entries)
+                 if (d.value.isNotEmpty)
+                   d.key: Set<String>.unmodifiable(d.value),
+             }),
+       }),
+       tasks = List<Task>.unmodifiable(
          <Task>[...tasks]..sort((a, b) => a.order.compareTo(b.order)),
        ),
        completions = Map<String, Map<LocalDate, DateTime>>.unmodifiable({
@@ -67,6 +77,28 @@ class TaskData {
 
   /// Task id → day → when the tick was made (UTC).
   final Map<String, Map<LocalDate, DateTime>> completions;
+
+  /// Task id → day → ids of the steps ticked that day.
+  final Map<String, Map<LocalDate, Set<String>>> stepTicks;
+
+  /// Steps of [taskId] ticked on [date] (only ids of steps that still exist).
+  Set<String> stepsDone(String taskId, LocalDate date) {
+    final ticked = stepTicks[taskId]?[date];
+    if (ticked == null) return const {};
+    final ids = taskById(taskId)?.steps.map((s) => s.id).toSet() ?? const {};
+    return ticked.intersection(ids);
+  }
+
+  /// Ticks ([on]) or unticks one step of [taskId] for [date].
+  TaskData withStepTick(String taskId, LocalDate date, String stepId, bool on) {
+    final forTask = <LocalDate, Set<String>>{
+      for (final e in (stepTicks[taskId] ?? const {}).entries)
+        e.key: {...e.value},
+    };
+    final day = forTask.putIfAbsent(date, () => {});
+    on ? day.add(stepId) : day.remove(stepId);
+    return copyWith(stepTicks: {...stepTicks, taskId: forTask});
+  }
 
   Task? taskById(String id) {
     for (final t in tasks) {
@@ -156,9 +188,11 @@ class TaskData {
   TaskData copyWith({
     List<Task>? tasks,
     Map<String, Map<LocalDate, DateTime>>? completions,
+    Map<String, Map<LocalDate, Set<String>>>? stepTicks,
   }) => TaskData(
     tasks: tasks ?? this.tasks,
     completions: completions ?? this.completions,
+    stepTicks: stepTicks ?? this.stepTicks,
   );
 
   /// [task] added, or replacing the task with the same id.
@@ -181,6 +215,10 @@ class TaskData {
     ],
     completions: {
       for (final e in completions.entries)
+        if (e.key != taskId) e.key: e.value,
+    },
+    stepTicks: {
+      for (final e in stepTicks.entries)
         if (e.key != taskId) e.key: e.value,
     },
   );

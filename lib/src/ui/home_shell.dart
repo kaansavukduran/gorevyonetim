@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 
 import '../app/task_controller.dart';
 import '../domain/local_date.dart';
+import 'character_page.dart';
 import 'day_page.dart';
 import 'history_page.dart';
+import 'settings_page.dart';
 import 'task_actions.dart';
 import 'tasks_page.dart';
 
@@ -37,7 +39,46 @@ class _HomeShellState extends State<HomeShell> {
       if (controller.refreshToday() && _day == before) {
         setState(() => _day = controller.today);
       }
+      _remind();
     });
+  }
+
+  /// Reminders already shown today (task id + time), so each shows once.
+  final Set<String> _reminded = {};
+
+  /// Shows an in-app reminder for every task whose time has come today and
+  /// that is not ticked yet. (System notifications are not used: the app
+  /// works only while it is open.)
+  void _remind() {
+    if (!mounted || controller.state != LoadState.ready) return;
+    final now = controller.now();
+    final today = controller.today;
+    final minutes = now.hour * 60 + now.minute;
+    final due = [
+      for (final t in controller.data.tasksOn(today))
+        if (t.time != null &&
+            t.time!.minutes <= minutes &&
+            !controller.data.isDone(t.id, today) &&
+            _reminded.add('${today.toIso()} ${t.id} ${t.time!.format()}'))
+          t,
+    ];
+    if (due.isEmpty) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        key: const Key('reminder'),
+        width: 520,
+        duration: const Duration(seconds: 12),
+        content: Text(
+          'Hatırlatma: ${due.map((t) => '${t.time!.format()} ${t.title}').join(', ')}',
+        ),
+        action: SnackBarAction(
+          label: 'Güne git',
+          onPressed: () => _setDay(controller.today),
+        ),
+      ),
+    );
   }
 
   @override
@@ -71,18 +112,38 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
+  /// Tabs in order; Karakter only in game mode.
+  List<_Tab> _tabs() => [
+    const _Tab('gun', Icons.today_outlined, Icons.today, 'Gün'),
+    const _Tab('gorevler', Icons.list_alt_outlined, Icons.list_alt, 'Görevler'),
+    const _Tab('kontrol', Icons.grid_view_outlined, Icons.grid_view, 'Kontrol'),
+    if (controller.settings.gameMode)
+      const _Tab('karakter', Icons.person_outline, Icons.person, 'Karakter'),
+    const _Tab('ayarlar', Icons.settings_outlined, Icons.settings, 'Ayarlar'),
+  ];
+
+  void _go(String id) {
+    final i = _tabs().indexWhere((t) => t.id == id);
+    if (i >= 0) setState(() => _tab = i);
+  }
+
   Widget _ready(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 720;
-    final pages = [
-      DayPage(controller: controller, day: _day, onDayChanged: _setDay),
-      TasksPage(controller: controller),
-      HistoryPage(controller: controller),
-    ];
-    const destinations = [
-      (Icons.today_outlined, Icons.today_rounded, 'Gün'),
-      (Icons.list_alt_outlined, Icons.list_alt_rounded, 'Görevler'),
-      (Icons.grid_view_outlined, Icons.grid_view_rounded, 'Kontrol'),
-    ];
+    final tabs = _tabs();
+    if (_tab >= tabs.length) _tab = tabs.length - 1;
+    final current = tabs[_tab].id;
+    final Widget page = switch (current) {
+      'gun' => DayPage(
+        controller: controller,
+        day: _day,
+        onDayChanged: _setDay,
+        onOpenCharacter: () => _go('karakter'),
+      ),
+      'gorevler' => TasksPage(controller: controller),
+      'kontrol' => HistoryPage(controller: controller),
+      'karakter' => CharacterPage(controller: controller),
+      _ => SettingsPage(controller: controller, version: widget.version),
+    };
 
     final body = Column(
       children: [
@@ -98,24 +159,13 @@ class _HomeShellState extends State<HomeShell> {
                 '${controller.saveError}\nDeğişiklik ekranda duruyor; bir sonraki değişiklikte yeniden denenecek.',
             error: true,
           ),
-        Expanded(child: pages[_tab]),
+        Expanded(child: page),
       ],
     );
 
     final scaffold = Scaffold(
-      appBar: AppBar(
-        title: const Text('Günlük Görevler'),
-        actions: [
-          IconButton(
-            key: const Key('about-button'),
-            tooltip: 'Veriler nerede, kısayollar',
-            icon: const Icon(Icons.info_outline_rounded),
-            onPressed: () => _showAbout(context),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      floatingActionButton: _tab != 1
+      appBar: AppBar(title: const Text('Günlük Görevler')),
+      floatingActionButton: current != 'gorevler'
           ? null
           : FloatingActionButton.extended(
               key: const Key('new-task-fab'),
@@ -130,11 +180,11 @@ class _HomeShellState extends State<HomeShell> {
               selectedIndex: _tab,
               onDestinationSelected: (i) => setState(() => _tab = i),
               destinations: [
-                for (final d in destinations)
+                for (final t in tabs)
                   NavigationDestination(
-                    icon: Icon(d.$1),
-                    selectedIcon: Icon(d.$2),
-                    label: d.$3,
+                    icon: Icon(t.icon),
+                    selectedIcon: Icon(t.selected),
+                    label: t.label,
                   ),
               ],
             ),
@@ -146,11 +196,11 @@ class _HomeShellState extends State<HomeShell> {
                   labelType: NavigationRailLabelType.all,
                   onDestinationSelected: (i) => setState(() => _tab = i),
                   destinations: [
-                    for (final d in destinations)
+                    for (final t in tabs)
                       NavigationRailDestination(
-                        icon: Icon(d.$1),
-                        selectedIcon: Icon(d.$2),
-                        label: Text(d.$3),
+                        icon: Icon(t.icon),
+                        selectedIcon: Icon(t.selected),
+                        label: Text(t.label),
                       ),
                   ],
                 ),
@@ -160,6 +210,10 @@ class _HomeShellState extends State<HomeShell> {
             )
           : body,
     );
+
+    void tab(int i) {
+      if (i < tabs.length) setState(() => _tab = i);
+    }
 
     return CallbackShortcuts(
       bindings: {
@@ -171,88 +225,27 @@ class _HomeShellState extends State<HomeShell> {
         const SingleActivator(LogicalKeyboardKey.keyB, alt: true): () =>
             _setDay(controller.today),
         const SingleActivator(LogicalKeyboardKey.digit1, control: true): () =>
-            setState(() => _tab = 0),
+            tab(0),
         const SingleActivator(LogicalKeyboardKey.digit2, control: true): () =>
-            setState(() => _tab = 1),
+            tab(1),
         const SingleActivator(LogicalKeyboardKey.digit3, control: true): () =>
-            setState(() => _tab = 2),
+            tab(2),
+        const SingleActivator(LogicalKeyboardKey.digit4, control: true): () =>
+            tab(3),
+        const SingleActivator(LogicalKeyboardKey.digit5, control: true): () =>
+            tab(4),
       },
       child: Focus(autofocus: true, child: scaffold),
     );
   }
+}
 
-  void _showAbout(BuildContext context) {
-    final store = controller.store;
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Günlük Görevler'),
-        content: SizedBox(
-          width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (widget.version.isNotEmpty) Text('Sürüm ${widget.version}'),
-              const SizedBox(height: 12),
-              const Text(
-                'Görevlerin bu bilgisayarda tek bir dosyada durur; internete hiçbir şey gönderilmez.',
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Veri dosyası:',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              SelectableText(store.location, key: const Key('about-location')),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  key: const Key('about-open-folder'),
-                  icon: const Icon(Icons.folder_open_rounded, size: 18),
-                  label: const Text('Klasörü aç'),
-                  onPressed: () async {
-                    final ok = await store.revealLocation();
-                    if (!ok && context.mounted) {
-                      showUndoSnack(
-                        context,
-                        'Klasör açılamadı. Yukarıdaki yolu seçip kopyalayabilirsin.',
-                      );
-                    }
-                  },
-                ),
-              ),
-              if (store.backupLocation != null) ...[
-                const SizedBox(height: 8),
-                const Text(
-                  'Günlük yedekler (son 14 gün):',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                SelectableText(store.backupLocation!),
-              ],
-              const SizedBox(height: 16),
-              const Text(
-                'Kısayollar',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const Text(
-                'Ctrl + N  yeni görev\n'
-                'Alt + ← / →  önceki / sonraki gün\n'
-                'Alt + B  bugüne dön\n'
-                'Ctrl + 1 / 2 / 3  Gün / Görevler / Kontrol',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Kapat'),
-          ),
-        ],
-      ),
-    );
-  }
+class _Tab {
+  const _Tab(this.id, this.icon, this.selected, this.label);
+  final String id;
+  final IconData icon;
+  final IconData selected;
+  final String label;
 }
 
 class _Banner extends StatelessWidget {

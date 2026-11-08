@@ -40,6 +40,98 @@ class ScheduleSegment {
   int get hashCode => Object.hash(from, rule);
 }
 
+/// How hard a task is; harder tasks give more XP.
+enum Difficulty {
+  kolay('Kolay', 10),
+  orta('Orta', 20),
+  zor('Zor', 35);
+
+  const Difficulty(this.label, this.baseXp);
+  final String label;
+  final int baseXp;
+
+  static Difficulty parse(Object? v) {
+    for (final d in values) {
+      if (d.name == v) return d;
+    }
+    throw FormatException('Bilinmeyen zorluk', v);
+  }
+}
+
+/// A clock time in the day ("HH:MM"), used as a reminder.
+class ClockTime implements Comparable<ClockTime> {
+  ClockTime(this.hour, this.minute) {
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      throw ArgumentError('Saat 00:00 ile 23:59 arasında olmalı');
+    }
+  }
+
+  factory ClockTime.parse(String text) {
+    final m = RegExp(r'^(\d{2}):(\d{2})$').firstMatch(text);
+    if (m == null) throw FormatException('Saat SS:DD biçiminde olmalı', text);
+    try {
+      return ClockTime(int.parse(m.group(1)!), int.parse(m.group(2)!));
+    } on ArgumentError {
+      throw FormatException('Böyle bir saat yok', text);
+    }
+  }
+
+  final int hour;
+  final int minute;
+
+  int get minutes => hour * 60 + minute;
+
+  String format() =>
+      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+  @override
+  int compareTo(ClockTime other) => minutes.compareTo(other.minutes);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ClockTime && other.minutes == minutes;
+
+  @override
+  int get hashCode => minutes;
+
+  @override
+  String toString() => format();
+}
+
+/// One step of a task (a small checklist item).
+class TaskStep {
+  TaskStep(this.id, this.title) {
+    if (id.isEmpty || title.trim().isEmpty) {
+      throw ArgumentError('Adımın kimliği ve adı olmalı');
+    }
+  }
+
+  final String id;
+  final String title;
+
+  Map<String, Object?> toJson() => {'id': id, 'title': title};
+
+  static TaskStep fromJson(Object? json) {
+    if (json is! Map<String, Object?> ||
+        json['id'] is! String ||
+        json['title'] is! String) {
+      throw const FormatException('Adım bozuk');
+    }
+    try {
+      return TaskStep(json['id']! as String, json['title']! as String);
+    } on ArgumentError catch (e) {
+      throw FormatException('${e.message}');
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is TaskStep && other.id == id && other.title == title;
+
+  @override
+  int get hashCode => Object.hash(id, title);
+}
+
 class Task {
   Task({
     required this.id,
@@ -48,7 +140,14 @@ class Task {
     required List<ScheduleSegment> schedule,
     required this.createdAt,
     required this.order,
-  }) : schedule = List.unmodifiable(schedule) {
+    this.difficulty = Difficulty.orta,
+    this.time,
+    List<TaskStep> steps = const [],
+  }) : schedule = List.unmodifiable(schedule),
+       steps = List.unmodifiable(steps) {
+    if (steps.map((s) => s.id).toSet().length != steps.length) {
+      throw ArgumentError('Aynı kimlikle iki adım var');
+    }
     if (title.trim().isEmpty) {
       throw ArgumentError('Görev adı boş olamaz');
     }
@@ -74,6 +173,15 @@ class Task {
 
   /// Position in lists; smaller comes first.
   final int order;
+
+  /// How hard the task is (XP).
+  final Difficulty difficulty;
+
+  /// Optional reminder time on the days the task is expected.
+  final ClockTime? time;
+
+  /// Optional checklist; ticking every step ticks the task.
+  final List<TaskStep> steps;
 
   /// First day the task could be expected.
   LocalDate get startDate => schedule.first.from;
@@ -136,6 +244,9 @@ class Task {
     String? note,
     List<ScheduleSegment>? schedule,
     int? order,
+    Difficulty? difficulty,
+    ClockTime? Function()? time,
+    List<TaskStep>? steps,
   }) => Task(
     id: id,
     title: title ?? this.title,
@@ -143,6 +254,9 @@ class Task {
     schedule: schedule ?? this.schedule,
     createdAt: createdAt,
     order: order ?? this.order,
+    difficulty: difficulty ?? this.difficulty,
+    time: time == null ? this.time : time(),
+    steps: steps ?? this.steps,
   );
 
   Map<String, Object?> toJson() => {
@@ -152,6 +266,9 @@ class Task {
     'schedule': [for (final s in schedule) s.toJson()],
     'created_at': createdAt.toUtc().toIso8601String(),
     'order': order,
+    'difficulty': difficulty.name,
+    'time': time?.format(),
+    'steps': [for (final s in steps) s.toJson()],
   };
 
   static Task fromJson(Object? json) {
@@ -178,6 +295,14 @@ class Task {
       throw FormatException('Görevin oluşturulma zamanı yok', id);
     }
     if (order is! int) throw FormatException('Görev sırası sayı olmalı', id);
+    final time = json['time'];
+    if (time != null && time is! String) {
+      throw FormatException('Görev saati metin olmalı', id);
+    }
+    final steps = json['steps'] ?? const <Object?>[];
+    if (steps is! List<Object?>) {
+      throw FormatException('Adımlar liste olmalı', id);
+    }
     try {
       return Task(
         id: id,
@@ -186,6 +311,11 @@ class Task {
         schedule: [for (final s in schedule) ScheduleSegment.fromJson(s)],
         createdAt: DateTime.parse(createdAt).toUtc(),
         order: order,
+        difficulty: json.containsKey('difficulty')
+            ? Difficulty.parse(json['difficulty'])
+            : Difficulty.orta,
+        time: time == null ? null : ClockTime.parse(time as String),
+        steps: [for (final s in steps) TaskStep.fromJson(s)],
       );
     } on ArgumentError catch (e) {
       throw FormatException('${e.message}', id);

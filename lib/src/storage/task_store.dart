@@ -1,3 +1,4 @@
+import '../app/settings.dart';
 import '../domain/task_data.dart';
 
 /// The outcome of reading the saved tasks.
@@ -42,7 +43,40 @@ abstract class TaskStore {
   /// started. Returns where it was moved to.
   Future<String> setAsideUnreadable({required DateTime now});
 
+  Future<AppSettings> loadSettings();
+
+  Future<void> saveSettings(AppSettings settings);
+
+  /// Writes a copy of [data] where the person can find it (Downloads) and
+  /// returns its path, or null when this store cannot export.
+  Future<String?> exportBackup(TaskData data, {required DateTime now});
+
+  /// Backup files this store can offer to import, newest first.
+  Future<List<BackupCandidate>> importCandidates();
+
+  /// Reads one candidate. Throws [FormatException] when it is not usable.
+  Future<TaskData> readCandidate(BackupCandidate candidate);
+
+  /// Keeps the current data aside before an import replaces it; returns
+  /// where it went (null when this store keeps no files).
+  Future<String?> keepBeforeImport(TaskData data, {required DateTime now});
+
   /// Opens the folder that holds the data in the system's file manager.
   /// Returns false when that is not possible here.
   Future<bool> revealLocation();
+}
+
+/// A file that looks like a backup of this app.
+class BackupCandidate {
+  const BackupCandidate({
+    required this.path,
+    required this.name,
+    required this.modified,
+    required this.taskCount,
+  });
+
+  final String path;
+  final String name;
+  final DateTime modified;
+  final int taskCount;
 }

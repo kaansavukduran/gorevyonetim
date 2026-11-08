@@ -1,3 +1,4 @@
+import '../app/settings.dart';
 import '../domain/codec.dart';
 import '../domain/task_data.dart';
 import 'task_store.dart';
@@ -14,6 +15,48 @@ class MemoryTaskStore implements TaskStore {
   Object? failWith;
 
   int saveCount = 0;
+
+  AppSettings settings = const AppSettings();
+
+  /// Backups offered for import in tests: name → file text.
+  final Map<String, String> backups = {};
+
+  /// Exported file texts, in order.
+  final List<String> exported = [];
+
+  @override
+  Future<AppSettings> loadSettings() async => settings;
+
+  @override
+  Future<void> saveSettings(AppSettings settings) async =>
+      this.settings = settings;
+
+  @override
+  Future<String?> exportBackup(TaskData data, {required DateTime now}) async {
+    exported.add(encodeTaskData(data, savedAt: now));
+    return null;
+  }
+
+  @override
+  Future<List<BackupCandidate>> importCandidates() async => [
+    for (final e in backups.entries)
+      BackupCandidate(
+        path: e.key,
+        name: e.key,
+        modified: DateTime.utc(2026),
+        taskCount: decodeTaskData(e.value).tasks.length,
+      ),
+  ];
+
+  @override
+  Future<TaskData> readCandidate(BackupCandidate candidate) async =>
+      decodeTaskData(backups[candidate.path]!);
+
+  @override
+  Future<String?> keepBeforeImport(
+    TaskData data, {
+    required DateTime now,
+  }) async => null;
 
   @override
   String get location => 'Bu tarayıcı sekmesinin belleği (kaydedilmez)';

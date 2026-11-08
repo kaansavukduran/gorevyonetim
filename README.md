@@ -4,20 +4,24 @@ Windows, macOS ve Linux için her gün tik atılan görev listesi (Google Tasks 
 
 ## Ne yapar
 
-- **Gün** sekmesi: o günün görevleri. Kutuya tıkla, yapıldı olarak işaretlenir (saatiyle). Tekrar tıkla, işaret kalkar ("Geri al" ile geri gelir). Okla ya da tarihe tıklayıp başka güne geç; geçmiş bir günü sonradan işaretlersen "sonradan işaretlendi" yazar. İleri bir gün işaretlenemez.
-- **Hızlı ekleme**: üstteki kutuya yaz, Enter. Tekrar seçimi: Her gün, Hafta içi ya da Sadece bu gün. Ayrıntılı ekleme (not, belirli günler, başlangıç tarihi) için ayar simgesi ya da "Yeni görev".
-- **Görevler** sekmesi: tüm görevler, son 30 günde kaç günün kaçında yapıldığı ve seri. Düzenle, sırala (sürükle), **Sonlandır** (bugünden sonra görünmez, geçmişi kalır) ya da **Sil** (görev ve tüm işaretleri kalıcı olarak silinir, "Geri al" ile hemen geri alınabilir).
-- **Kontrol** sekmesi: görev × gün tablosu (7 / 14 / 30 gün). Yapıldı, yapılmadı, bekliyor, planlı, bu gün yok ayrı simgelerle gösterilir; bir hücreye tıklayıp o günü düzeltebilirsin.
+- **Gün**: üstte seviye ve XP şeridi, altında haftanın günleri (her günün ne kadarının yapıldığı). Görev yaz, Enter; sıklık (her gün, hafta içi, sadece bu gün) kutunun içinde. Kutuya tıkla: yapıldı (saatiyle). Sağ tık: düzenle, sonlandır, sil.
+- **Görev ayrıntıları**: not, belirli günler, başlangıç, **zorluk** (Kolay 10 / Orta 20 / Zor 35 XP), **hatırlatma saati** (uygulama açıkken saati gelince haber verir, geçen saat kırmızı görünür) ve **adımlar** (her adımı işaretle; sonuncusu görevi bitirir).
+- **Görevler**: tümü, son 30 gün ve seri; tıkla düzenle, sürükle sırala, sonlandır ya da sil (geri alınabilir).
+- **Kontrol**: görev × gün tablosu (7 / 14 / 30 gün), hücreye tıklayıp düzelt.
+- **Karakter** (oyun modu): seviye ve unvan (Çaylak → Ölümsüz), statlar (İrade, Disiplin, Dayanıklılık, Cesaret, Odak, Toplam başarı), 14 rozet, "Nasıl XP kazanırım?".
+- **Ayarlar**: 6 tema (Fantastik Diyar, Neon Şehir, Orman Ruhu, Pastel Rüya, Gece Yarısı, Sade), oyun modu aç/kapat, yedeği dışa/içe aktar, veri klasörünü aç.
+
+Oyun kuralları: XP her zaman tik geçmişinden yeniden hesaplanır (saklanmaz, kendiliğinden artmaz). Kendi gününde işaretleme +5 XP ve seri bonusu (+2/gün, en fazla +20) getirir; sonradan işaretlenen gün yalnızca temel XP alır. Bir günün tüm görevleri bitince mükemmel gün: +25 XP, +1 İrade. Seviye n'den n+1'e: 100 + 40·(n−1) XP.
 
 Kurallar:
 - Görevin başlamadığı ya da sonlandırıldığı günler "yapılmadı" sayılmaz; bugün henüz işaretlenmediyse "bekliyor"dur.
 - Tekrar kuralını değiştirmek bugünden itibaren geçerlidir; önceki günler eski kurala göre kalır.
 
-Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+B` bugün · `Ctrl+1/2/3` sekmeler.
+Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+B` bugün · `Ctrl+1…5` sekmeler · sağ tık görev menüsü.
 
 ## Veriler nerede
 
-`%APPDATA%\GunlukGorevler\gorevler.json` (tek bir JSON dosyası). Her yazma önce geçici dosyaya yapılır, sonra eskisinin yerine konur; yarıda kesilen bir yazma eski dosyayı bozmaz. Her gün ilk değişiklikten önce dosyanın o anki hali `yedekler\gorevler-YYYY-AA-GG.json` olarak saklanır (son 14 gün). Okunamayan bir dosyanın üzerine asla yazılmaz. İnternete hiçbir şey gönderilmez; uygulama yalnızca Flutter SDK paketlerini kullanır.
+`%APPDATA%\GunlukGorevler\gorevler.json` (tek bir JSON dosyası). Her yazma önce geçici dosyaya yapılır, sonra eskisinin yerine konur; yarıda kesilen bir yazma eski dosyayı bozmaz. Her gün ilk değişiklikten önce dosyanın o anki hali `yedekler\gorevler-YYYY-AA-GG.json` olarak saklanır (son 14 gün). Okunamayan bir dosyanın üzerine asla yazılmaz. Dosya biçimi 2 (biçim 1 dosyaları açılır). Tema ve oyun modu ayrı bir `ayarlar.json` dosyasında. Dışa aktarılan yedekler İndirilenler klasörüne gider; içe aktarmadan önce mevcut liste `yedekler` klasörüne kaydedilir. İnternete hiçbir şey gönderilmez; uygulama yalnızca Flutter SDK paketlerini kullanır.
 
 ## İndirme
 

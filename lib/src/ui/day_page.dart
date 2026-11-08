@@ -6,9 +6,11 @@ import '../domain/repeat_rule.dart';
 import '../domain/task.dart';
 import '../domain/task_data.dart';
 import '../domain/turkish_dates.dart';
+import 'game_widgets.dart';
 import 'status_style.dart';
 import 'task_actions.dart';
 import 'task_editor.dart';
+import 'themes.dart';
 
 /// One day's list: the week at the top, a field to add, the tasks to tick.
 class DayPage extends StatelessWidget {
@@ -17,21 +19,31 @@ class DayPage extends StatelessWidget {
     required this.controller,
     required this.day,
     required this.onDayChanged,
+    this.onOpenCharacter,
   });
 
   final TaskController controller;
   final LocalDate day;
   final ValueChanged<LocalDate> onDayChanged;
+  final VoidCallback? onOpenCharacter;
 
   @override
   Widget build(BuildContext context) {
     final data = controller.data;
     final today = controller.today;
     final tasks = data.tasksOn(day);
-    final open = [
-      for (final t in tasks)
-        if (!data.isDone(t.id, day)) t,
-    ];
+    // Tasks with a time come first, in time order; the rest keep their order.
+    final open =
+        [
+          for (final t in tasks)
+            if (!data.isDone(t.id, day)) t,
+        ]..sort((a, b) {
+          final ta = a.time, tb = b.time;
+          if (ta != null && tb != null) return ta.compareTo(tb);
+          if (ta != null) return -1;
+          if (tb != null) return 1;
+          return a.order.compareTo(b.order);
+        });
     final done = [
       for (final t in tasks)
         if (data.isDone(t.id, day)) t,
@@ -47,6 +59,13 @@ class DayPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: SliverList.list(
                 children: [
+                  if (controller.settings.gameMode) ...[
+                    HeroStrip(
+                      profile: controller.profile,
+                      onTap: onOpenCharacter,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   _DayTitle(day: day, today: today, onDayChanged: onDayChanged),
                   const SizedBox(height: 12),
                   _WeekStrip(
@@ -596,7 +615,7 @@ class _EmptyDay extends StatelessWidget {
 }
 
 /// One task on one day. Click to tick, right-click or ⋮ for more.
-class TaskTile extends StatelessWidget {
+class TaskTile extends StatefulWidget {
   const TaskTile({
     super.key,
     required this.controller,
@@ -609,9 +628,44 @@ class TaskTile extends StatelessWidget {
   final LocalDate day;
 
   @override
+  State<TaskTile> createState() => _TaskTileState();
+}
+
+class _TaskTileState extends State<TaskTile> {
+  bool _open = false;
+
+  TaskController get controller => widget.controller;
+  Task get task => widget.task;
+  LocalDate get day => widget.day;
+
+  void _toggle() {
+    final before = controller.data;
+    final nowDone = withGameFeedback(
+      context,
+      controller,
+      () => controller.toggle(task.id, day),
+    );
+    if (!nowDone) {
+      showUndoSnack(
+        context,
+        '"${task.title}" işareti kaldırıldı.',
+        onUndo: () => controller.restore(before),
+      );
+    }
+  }
+
+  void _toggleStep(String stepId) => withGameFeedback(
+    context,
+    controller,
+    () => controller.toggleStep(task.id, day, stepId),
+  );
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final style = GameStyle.of(context);
+    final game = controller.settings.gameMode;
     final data = controller.data;
     final today = controller.today;
     final status = data.statusOf(task, day, today);
@@ -619,101 +673,196 @@ class TaskTile extends StatelessWidget {
     final future = day.isAfter(today);
     final rule = task.ruleOn(day) ?? task.lastRule;
     final streak = day == today ? data.streakFor(task, today) : 0;
+    final stepsDone = data.stepsDone(task.id, day);
+    final now = controller.now();
+    final late =
+        task.time != null &&
+        day == today &&
+        !done &&
+        task.time!.minutes <= now.hour * 60 + now.minute;
 
-    void toggle() {
-      final before = controller.data;
-      final nowDone = controller.toggle(task.id, day);
-      if (!nowDone) {
-        showUndoSnack(
-          context,
-          '"${task.title}" işareti kaldırıldı.',
-          onUndo: () => controller.restore(before),
+    Widget chip(String text, {Key? key, Color? color, IconData? icon}) =>
+        Container(
+          key: key,
+          margin: const EdgeInsets.only(left: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: (color ?? scheme.secondary).withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 14, color: color ?? scheme.secondary),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                text,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color ?? scheme.secondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         );
-      }
-    }
+
+    final diffColor = switch (task.difficulty) {
+      Difficulty.kolay => scheme.primary,
+      Difficulty.orta => style.xp,
+      Difficulty.zor => scheme.error,
+    };
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       child: Material(
         key: Key('task-tile-${task.id}'),
-        color: done ? scheme.surfaceContainerLow : scheme.surface,
+        color: done
+            ? scheme.surfaceContainerLow.withValues(alpha: 0.85)
+            : scheme.surface.withValues(alpha: 0.92),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: scheme.outlineVariant),
+          side: BorderSide(
+            color: late
+                ? scheme.error.withValues(alpha: 0.7)
+                : style.cardBorder,
+          ),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: future ? null : toggle,
+          onTap: future ? null : _toggle,
           onSecondaryTapUp: (d) =>
               showTaskMenuAt(context, controller, task, d.globalPosition),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
-            child: Row(
+            child: Column(
               children: [
-                Tooltip(
-                  message: future
-                      ? 'İleri bir gün işaretlenemez'
-                      : (done ? 'İşareti kaldır' : 'Yapıldı olarak işaretle'),
-                  child: Transform.scale(
-                    scale: 1.2,
-                    child: Checkbox(
-                      key: Key('task-check-${task.id}'),
-                      value: done,
-                      shape: const CircleBorder(),
-                      onChanged: future ? null : (_) => toggle(),
-                      semanticLabel:
-                          '${task.title}: ${StatusStyle.of(status, scheme).label}',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 180),
-                        style: theme.textTheme.titleMedium!.copyWith(
-                          decoration: done ? TextDecoration.lineThrough : null,
-                          color: done
-                              ? scheme.onSurfaceVariant
-                              : scheme.onSurface,
+                Row(
+                  children: [
+                    Tooltip(
+                      message: future
+                          ? 'İleri bir gün işaretlenemez'
+                          : (done
+                                ? 'İşareti kaldır'
+                                : 'Yapıldı olarak işaretle'),
+                      child: Transform.scale(
+                        scale: 1.2,
+                        child: Checkbox(
+                          key: Key('task-check-${task.id}'),
+                          value: done,
+                          shape: const CircleBorder(),
+                          onChanged: future ? null : (_) => _toggle(),
+                          semanticLabel:
+                              '${task.title}: ${StatusStyle.of(status, scheme).label}',
                         ),
-                        child: Text(task.title),
                       ),
-                      const SizedBox(height: 2),
-                      _StatusLine(
-                        status: status,
-                        rule: rule,
-                        note: task.note,
-                        doneAt: data.doneAt(task.id, day),
-                        day: day,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 180),
+                            style: theme.textTheme.titleMedium!.copyWith(
+                              decoration: done
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              color: done
+                                  ? scheme.onSurfaceVariant
+                                  : scheme.onSurface,
+                            ),
+                            child: Text(task.title),
+                          ),
+                          const SizedBox(height: 2),
+                          _StatusLine(
+                            status: status,
+                            rule: rule,
+                            note: task.note,
+                            doneAt: data.doneAt(task.id, day),
+                            day: day,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                if (streak >= 2)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Tooltip(
-                      message: 'Üst üste $streak gün yapıldı',
-                      child: Chip(
-                        key: Key('task-streak-${task.id}'),
-                        avatar: Icon(
-                          Icons.whatshot,
-                          size: 16,
+                    ),
+                    if (task.time != null)
+                      chip(
+                        late
+                            ? '${task.time!.format()} geçti'
+                            : task.time!.format(),
+                        key: Key('task-time-${task.id}'),
+                        icon: Icons.schedule,
+                        color: late ? scheme.error : scheme.onSurfaceVariant,
+                      ),
+                    if (task.steps.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: TextButton.icon(
+                          key: Key('task-steps-${task.id}'),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          onPressed: () => setState(() => _open = !_open),
+                          icon: Icon(
+                            _open ? Icons.expand_less : Icons.expand_more,
+                            size: 18,
+                          ),
+                          label: Text(
+                            '${stepsDone.length}/${task.steps.length} adım',
+                          ),
+                        ),
+                      ),
+                    if (game)
+                      Tooltip(
+                        message:
+                            '${task.difficulty.label}: ${task.difficulty.baseXp} XP',
+                        child: chip(
+                          task.difficulty.label,
+                          key: Key('task-diff-${task.id}'),
+                          color: diffColor,
+                        ),
+                      ),
+                    if (streak >= 2)
+                      Tooltip(
+                        message: 'Üst üste $streak gün yapıldı',
+                        child: chip(
+                          '$streak gün',
+                          key: Key('task-streak-${task.id}'),
+                          icon: Icons.whatshot,
                           color: scheme.tertiary,
                         ),
-                        label: Text('$streak gün'),
-                        visualDensity: VisualDensity.compact,
-                        side: BorderSide.none,
-                        backgroundColor: scheme.tertiaryContainer.withValues(
-                          alpha: 0.5,
-                        ),
                       ),
+                    TaskMenu(controller: controller, task: task),
+                  ],
+                ),
+                if (_open && task.steps.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(40, 0, 8, 4),
+                    child: Column(
+                      children: [
+                        for (final st in task.steps)
+                          CheckboxListTile(
+                            key: Key('step-${task.id}-${st.id}'),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: stepsDone.contains(st.id),
+                            onChanged: future
+                                ? null
+                                : (_) => _toggleStep(st.id),
+                            title: Text(
+                              st.title,
+                              style: TextStyle(
+                                decoration: stepsDone.contains(st.id)
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                TaskMenu(controller: controller, task: task),
               ],
             ),
           ),

@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gunluk_gorevler/src/app/settings.dart';
 import 'package:gunluk_gorevler/src/app/task_controller.dart';
 import 'package:gunluk_gorevler/src/domain/codec.dart';
 import 'package:gunluk_gorevler/src/domain/local_date.dart';
 import 'package:gunluk_gorevler/src/domain/repeat_rule.dart';
+import 'package:gunluk_gorevler/src/domain/task.dart';
+import 'package:gunluk_gorevler/src/domain/task_data.dart';
 import 'package:gunluk_gorevler/src/storage/memory_task_store.dart';
 
 LocalDate d(String iso) => LocalDate.parse(iso);
@@ -239,5 +242,95 @@ void main() {
         c.addTask(title: 'g$i', rule: const DailyRule(), start: c.today).id,
     };
     expect(ids, hasLength(50));
+  });
+
+  test('ticking every step ticks the task; unticking a step unticks it', () {
+    final t = c.addTask(
+      title: 'Spor',
+      rule: const DailyRule(),
+      start: c.today,
+      steps: ['Isın', ' ', 'Koş'],
+    );
+    final steps = c.data.taskById(t.id)!.steps;
+    expect(steps.map((s) => s.title), ['Isın', 'Koş']);
+    expect(c.toggleStep(t.id, c.today, steps[0].id), isFalse);
+    expect(c.data.isDone(t.id, c.today), isFalse);
+    expect(c.toggleStep(t.id, c.today, steps[1].id), isTrue);
+    expect(c.data.isDone(t.id, c.today), isTrue);
+    expect(c.toggleStep(t.id, c.today, steps[0].id), isFalse);
+    expect(c.data.isDone(t.id, c.today), isFalse);
+    expect(
+      () => c.toggleStep(t.id, c.today.addDays(1), steps[0].id),
+      throwsStateError,
+    );
+  });
+
+  test('editing steps keeps the ids (and ticks) of unchanged steps', () {
+    final t = c.addTask(
+      title: 'Spor',
+      rule: const DailyRule(),
+      start: c.today,
+      steps: ['Isın', 'Koş'],
+    );
+    final isin = c.data.taskById(t.id)!.steps.first;
+    c.toggleStep(t.id, c.today, isin.id);
+    c.updateTask(t.id, title: 'Spor', steps: ['Koş', 'Isın', 'Esne']);
+    final after = c.data.taskById(t.id)!;
+    expect(after.steps.map((s) => s.title), ['Koş', 'Isın', 'Esne']);
+    expect(after.steps[1].id, isin.id);
+    expect(c.data.stepsDone(t.id, c.today), {isin.id});
+  });
+
+  test('difficulty and time are saved and can be cleared', () {
+    final t = c.addTask(
+      title: 'Kitap',
+      rule: const DailyRule(),
+      start: c.today,
+      difficulty: Difficulty.zor,
+      time: ClockTime(21, 0),
+    );
+    expect(c.data.taskById(t.id)!.difficulty, Difficulty.zor);
+    c.updateTask(t.id, title: 'Kitap', time: () => null);
+    expect(c.data.taskById(t.id)!.time, isNull);
+    expect(c.data.taskById(t.id)!.difficulty, Difficulty.zor);
+  });
+
+  test('the game profile follows every change', () {
+    final t = c.addTask(title: 'Su', rule: const DailyRule(), start: c.today);
+    expect(c.profile.totalXp, 0);
+    c.toggle(t.id, c.today);
+    expect(c.profile.totalXp, 25 + 25);
+    c.toggle(t.id, c.today);
+    expect(c.profile.totalXp, 0);
+  });
+
+  test('settings load, change and save', () async {
+    store.settings = const AppSettings(themeId: 'neon', gameMode: false);
+    final c2 = TaskController(store: store, clock: () => now);
+    await c2.load();
+    expect(c2.settings.themeId, 'neon');
+    await c2.updateSettings(c2.settings.copyWith(gameMode: true));
+    expect(store.settings.gameMode, isTrue);
+  });
+
+  test('import replaces the data after keeping it; restore undoes', () async {
+    c.addTask(title: 'Eski', rule: const DailyRule(), start: c.today);
+    final before = c.data;
+    final imported = TaskData(
+      tasks: [
+        Task(
+          id: 'x',
+          title: 'Yeni',
+          note: '',
+          schedule: [ScheduleSegment(c.today, const DailyRule())],
+          createdAt: DateTime.utc(2026),
+          order: 0,
+        ),
+      ],
+    );
+    await c.importBackup(imported);
+    expect(c.data.tasks.single.title, 'Yeni');
+    c.restore(before);
+    expect(c.data.tasks.single.title, 'Eski');
   });
 }

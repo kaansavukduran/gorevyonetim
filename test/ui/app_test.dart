@@ -6,6 +6,8 @@ import 'package:gunluk_gorevler/src/app/task_controller.dart';
 import 'package:gunluk_gorevler/src/domain/codec.dart';
 import 'package:gunluk_gorevler/src/domain/local_date.dart';
 import 'package:gunluk_gorevler/src/domain/repeat_rule.dart';
+import 'package:gunluk_gorevler/src/domain/task.dart';
+import 'package:gunluk_gorevler/src/domain/task_data.dart';
 import 'package:gunluk_gorevler/src/storage/memory_task_store.dart';
 import 'package:gunluk_gorevler/src/ui/app.dart';
 
@@ -374,7 +376,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Görevler'));
     await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
+    for (final tab in ['Karakter', 'Ayarlar', 'Gün']) {
+      await tester.tap(find.text(tab).last);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: tab);
+    }
   });
 
   testWidgets('the week strip opens a day and moves by a week', (tester) async {
@@ -499,10 +505,247 @@ void main() {
     tester,
   ) async {
     await pumpApp(tester);
-    await tester.tap(find.byKey(const Key('about-button')));
+    await tester.tap(find.text('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('about-open-folder')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('about-open-folder')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Klasör açılamadı'), findsOneWidget);
+  });
+
+  group('game', () {
+    testWidgets('a tick shows the XP it earned and the hero strip moves', (
+      tester,
+    ) async {
+      final h = await pumpApp(
+        tester,
+        seed: (c) => c.addTask(
+          title: 'Su iç',
+          rule: const DailyRule(),
+          start: d('2026-11-07'),
+        ),
+      );
+      expect(find.byKey(const Key('hero-strip')), findsOneWidget);
+      expect(find.text('+0'), findsOneWidget);
+      await tester.tap(checkOf(h.controller.data.tasks.single.id));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('+50 XP'), findsOneWidget);
+      expect(find.textContaining('Mükemmel gün! +1 İrade'), findsOneWidget);
+      expect(find.textContaining('Yeni rozet: İlk Adım'), findsOneWidget);
+      expect(find.text('+50'), findsOneWidget);
+      expect(find.text('50 / 100 XP'), findsOneWidget);
+    });
+
+    testWidgets('crossing a level opens the level-up window', (tester) async {
+      final h = await pumpApp(
+        tester,
+        seed: (c) {
+          final t = c.addTask(
+            title: 'Ağırlık',
+            rule: const DailyRule(),
+            start: d('2026-11-06'),
+            difficulty: Difficulty.zor,
+          );
+          c.toggle(t.id, d('2026-11-06')); // late: 35 + 25 perfect
+        },
+      );
+      expect(h.controller.profile.level, 1);
+      await tester.tap(checkOf(h.controller.data.tasks.single.id));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('level-up')), findsOneWidget);
+      expect(find.text('Seviye atladın!'), findsOneWidget);
+      expect(find.text('Seviye 2: Çaylak'), findsOneWidget);
+      await tester.tap(find.text('Devam'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('level-up')), findsNothing);
+    });
+
+    testWidgets('the character page shows title, stats and badges', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        seed: (c) {
+          final t = c.addTask(
+            title: 'Su iç',
+            rule: const DailyRule(),
+            start: d('2026-11-07'),
+          );
+          c.toggle(t.id, d('2026-11-07'));
+        },
+      );
+      await tester.tap(find.byKey(const Key('hero-strip')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('character-title')), findsOneWidget);
+      expect(find.text('Çaylak'), findsWidgets);
+      expect(find.byKey(const Key('stat-İrade')), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('stat-İrade'))).data,
+        '1',
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('stat-Toplam başarı'))).data,
+        '1',
+      );
+      expect(find.byKey(const Key('badge-ilk-adim')), findsOneWidget);
+    });
+
+    testWidgets('themes switch and are saved', (tester) async {
+      final h = await pumpApp(tester);
+      await tester.tap(find.text('Ayarlar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('theme-neon')));
+      await tester.pumpAndSettle();
+      expect(h.controller.settings.themeId, 'neon');
+      expect(h.store.settings.themeId, 'neon');
+      final ctx = tester.element(find.byKey(const Key('theme-neon')));
+      expect(Theme.of(ctx).colorScheme.primary, const Color(0xFF25E2F2));
+      await tester.tap(find.byKey(const Key('theme-sade')));
+      await tester.pumpAndSettle();
+      expect(Theme.of(ctx).brightness, Brightness.light);
+    });
+
+    testWidgets('game mode off hides XP, levels and the Karakter tab', (
+      tester,
+    ) async {
+      final h = await pumpApp(
+        tester,
+        seed: (c) => c.addTask(
+          title: 'Su iç',
+          rule: const DailyRule(),
+          start: d('2026-11-07'),
+        ),
+      );
+      expect(find.text('Karakter'), findsOneWidget);
+      await tester.tap(find.text('Ayarlar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('game-mode')));
+      await tester.pumpAndSettle();
+      expect(find.text('Karakter'), findsNothing);
+      await tester.tap(find.text('Gün'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('hero-strip')), findsNothing);
+      final id = h.controller.data.tasks.single.id;
+      expect(find.byKey(Key('task-diff-$id')), findsNothing);
+      await tester.tap(checkOf(id));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('XP'), findsNothing);
+    });
+  });
+
+  testWidgets('steps open, tick, and the last step ticks the task', (
+    tester,
+  ) async {
+    final h = await pumpApp(
+      tester,
+      seed: (c) => c.addTask(
+        title: 'Spor',
+        rule: const DailyRule(),
+        start: d('2026-11-07'),
+        steps: ['Isın', 'Koş'],
+      ),
+    );
+    final t = h.controller.data.tasks.single;
+    expect(find.text('0/2 adım'), findsOneWidget);
+    await tester.tap(find.byKey(Key('task-steps-${t.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('step-${t.id}-${t.steps[0].id}')));
+    await tester.pumpAndSettle();
+    expect(find.text('1/2 adım'), findsOneWidget);
+    expect(h.controller.data.isDone(t.id, d('2026-11-07')), isFalse);
+    await tester.tap(find.byKey(Key('step-${t.id}-${t.steps[1].id}')));
+    await tester.pumpAndSettle();
+    expect(h.controller.data.isDone(t.id, d('2026-11-07')), isTrue);
+    expect(find.text('Tamamlananlar (1)'), findsOneWidget);
+  });
+
+  testWidgets('a passed reminder time is shown and announced once', (
+    tester,
+  ) async {
+    final h = await pumpApp(
+      tester,
+      seed: (c) => c.addTask(
+        title: 'İlaç zamanı değil, su',
+        rule: const DailyRule(),
+        start: d('2026-11-07'),
+        time: ClockTime(9, 30),
+      ),
+    );
+    final id = h.controller.data.tasks.single.id;
+    expect(find.text('09:30 geçti'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pump();
+    expect(find.byKey(const Key('reminder')), findsOneWidget);
+    expect(find.textContaining('Hatırlatma: 09:30'), findsOneWidget);
+    ScaffoldMessenger.of(tester.element(find.byKey(Key('task-tile-$id'))))
+        .removeCurrentSnackBar();
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pump();
+    expect(find.byKey(const Key('reminder')), findsNothing);
+  });
+
+  testWidgets('a backup is exported and another one imported', (tester) async {
+    final store = MemoryTaskStore();
+    store.backups['eski-gorevler.json'] = encodeTaskData(
+      TaskData(
+        tasks: [
+          Task(
+            id: 'x',
+            title: 'Yedekteki görev',
+            note: '',
+            schedule: [ScheduleSegment(d('2026-11-01'), const DailyRule())],
+            createdAt: DateTime.utc(2026),
+            order: 0,
+          ),
+        ],
+      ),
+      savedAt: DateTime.utc(2026),
+    );
+    final h = await pumpApp(
+      tester,
+      store: store,
+      seed: (c) => c.addTask(
+        title: 'Şimdiki',
+        rule: const DailyRule(),
+        start: d('2026-11-07'),
+      ),
+    );
+    await tester.tap(find.text('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('import')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('export')));
+    await tester.pumpAndSettle();
+    expect(store.exported.single, contains('Şimdiki'));
+    await tester.tap(find.byKey(const Key('import')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('candidate-eski-gorevler.json')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-import')));
+    await tester.pumpAndSettle();
+    expect(h.controller.data.tasks.single.title, 'Yedekteki görev');
+    await tester.tap(find.text('Geri al'));
+    await tester.pumpAndSettle();
+    expect(h.controller.data.tasks.single.title, 'Şimdiki');
+  });
+
+  testWidgets('a task already done is not reminded', (tester) async {
+    await pumpApp(
+      tester,
+      seed: (c) {
+        final t = c.addTask(
+          title: 'Su',
+          rule: const DailyRule(),
+          start: d('2026-11-07'),
+          time: ClockTime(9, 0),
+        );
+        c.toggle(t.id, d('2026-11-07'));
+      },
+    );
+    expect(find.text('09:00 geçti'), findsNothing);
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pump();
+    expect(find.byKey(const Key('reminder')), findsNothing);
   });
 }

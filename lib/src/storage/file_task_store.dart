@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../app/settings.dart';
 import '../domain/codec.dart';
 import '../domain/local_date.dart';
 import '../domain/task_data.dart';
@@ -32,6 +33,32 @@ String defaultDataDirectory(Map<String, String> env, String os) {
   }
 }
 
+/// Where exported backups go: the person's Downloads folder (the Turkish
+/// "İndirilenler" on Linux desktops that use it), else the home folder.
+String downloadsDirectory(
+  Map<String, String> env,
+  String os, {
+  bool Function(String path)? exists,
+}) {
+  final has = exists ?? (String p) => Directory(p).existsSync();
+  final override = env['GUNLUK_GOREVLER_DOWNLOADS'];
+  if (override != null && override.isNotEmpty) return override;
+  if (os == 'windows') {
+    final profile = env['USERPROFILE'];
+    if (profile == null || profile.isEmpty) {
+      throw StateError('USERPROFILE tanımlı değil');
+    }
+    return '$profile\\Downloads';
+  }
+  final home = _home(env);
+  final xdg = env['XDG_DOWNLOAD_DIR'];
+  if (xdg != null && xdg.isNotEmpty && has(xdg)) return xdg;
+  for (final name in ['Downloads', 'İndirilenler']) {
+    if (has('$home/$name')) return '$home/$name';
+  }
+  return home;
+}
+
 String _home(Map<String, String> env) {
   final home = env['HOME'];
   if (home == null || home.isEmpty) throw StateError('HOME tanımlı değil');
@@ -43,13 +70,18 @@ String _home(Map<String, String> env) {
 /// file intact. Once a day the file as it was is copied to `yedekler/`
 /// (the last [keepBackups] days are kept).
 class FileTaskStore implements TaskStore {
-  FileTaskStore(this.directory, {this.keepBackups = 14});
+  FileTaskStore(this.directory, {this.keepBackups = 14, this.downloads});
 
   factory FileTaskStore.forThisDevice() => FileTaskStore(
     defaultDataDirectory(Platform.environment, Platform.operatingSystem),
+    downloads: () =>
+        downloadsDirectory(Platform.environment, Platform.operatingSystem),
   );
 
   final String directory;
+
+  /// Folder for exported backups (resolved when needed).
+  String Function()? downloads;
   final int keepBackups;
 
   /// Writes are queued so two saves never interleave.
@@ -129,6 +161,90 @@ class FileTaskStore implements TaskStore {
     while (names.length > keepBackups) {
       await names.removeAt(0).delete();
     }
+  }
+
+  File get _settingsFile => File('$directory${_sep}ayarlar.json');
+
+  @override
+  Future<AppSettings> loadSettings() async {
+    try {
+      if (!await _settingsFile.exists()) return const AppSettings();
+      return AppSettings.decode(await _settingsFile.readAsString());
+    } on FileSystemException {
+      return const AppSettings();
+    }
+  }
+
+  @override
+  Future<void> saveSettings(AppSettings settings) async {
+    await Directory(directory).create(recursive: true);
+    final tmp = File('${_settingsFile.path}.tmp');
+    await tmp.writeAsString(settings.encode(), flush: true);
+    await tmp.rename(_settingsFile.path);
+  }
+
+  static String _stamp(DateTime now) {
+    final l = now.toLocal();
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${LocalDate.of(l).toIso()}-${two(l.hour)}${two(l.minute)}${two(l.second)}';
+  }
+
+  @override
+  Future<String?> exportBackup(TaskData data, {required DateTime now}) async {
+    final dir = downloads?.call() ?? directory;
+    await Directory(dir).create(recursive: true);
+    final target = File('$dir${_sep}gunluk-gorevler-yedek-${_stamp(now)}.json');
+    await target.writeAsString(encodeTaskData(data, savedAt: now), flush: true);
+    return target.path;
+  }
+
+  @override
+  Future<List<BackupCandidate>> importCandidates() async {
+    final dirs = <String>{backups.path, if (downloads != null) downloads!()};
+    final found = <BackupCandidate>[];
+    for (final dir in dirs) {
+      final d = Directory(dir);
+      if (!await d.exists()) continue;
+      await for (final e in d.list()) {
+        if (e is! File) continue;
+        final name = e.uri.pathSegments.last;
+        if (!name.endsWith('.json') || !name.contains('gorevler')) continue;
+        try {
+          final stat = await e.stat();
+          if (stat.size > 50 * 1024 * 1024) continue;
+          final data = decodeTaskData(await e.readAsString());
+          found.add(
+            BackupCandidate(
+              path: e.path,
+              name: name,
+              modified: stat.modified,
+              taskCount: data.tasks.length,
+            ),
+          );
+        } on Object {
+          // Not a backup of this app (or unreadable): not offered.
+        }
+      }
+    }
+    found.sort((a, b) => b.modified.compareTo(a.modified));
+    return found;
+  }
+
+  @override
+  Future<TaskData> readCandidate(BackupCandidate candidate) async =>
+      decodeTaskData(await File(candidate.path).readAsString());
+
+  @override
+  Future<String?> keepBeforeImport(
+    TaskData data, {
+    required DateTime now,
+  }) async {
+    await backups.create(recursive: true);
+    final target = File(
+      '${backups.path}${_sep}gorevler-ice-aktarma-oncesi-${_stamp(now)}.json',
+    );
+    await target.writeAsString(encodeTaskData(data, savedAt: now), flush: true);
+    return target.path;
   }
 
   /// Runs [program] with [arguments]; replaced in tests.

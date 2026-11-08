@@ -3,31 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../app/task_controller.dart';
 import 'home_shell.dart';
-
-const Color _seed = Color(0xFF2F7D6D);
-
-ThemeData buildTheme(Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(seedColor: _seed, brightness: brightness);
-  return ThemeData(
-    colorScheme: scheme,
-    useMaterial3: true,
-    visualDensity: VisualDensity.standard,
-    scaffoldBackgroundColor: scheme.surfaceContainerLowest,
-    appBarTheme: AppBarTheme(
-      backgroundColor: scheme.surfaceContainerLowest,
-      surfaceTintColor: Colors.transparent,
-      titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurface,
-      ),
-    ),
-    navigationRailTheme: NavigationRailThemeData(
-      backgroundColor: scheme.surfaceContainerLowest,
-    ),
-    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
-  );
-}
+import 'themes.dart';
 
 class GunlukGorevlerApp extends StatelessWidget {
   const GunlukGorevlerApp({
@@ -40,14 +16,31 @@ class GunlukGorevlerApp extends StatelessWidget {
   final String version;
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'Günlük Görevler',
-    debugShowCheckedModeBanner: false,
-    theme: buildTheme(Brightness.light),
-    darkTheme: buildTheme(Brightness.dark),
-    locale: const Locale('tr', 'TR'),
-    supportedLocales: const [Locale('tr', 'TR')],
-    localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    home: HomeShell(controller: controller, version: version),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: controller,
+    builder: (context, _) {
+      final spec = themeById(controller.settings.themeId);
+      return MaterialApp(
+        title: 'Günlük Görevler',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(spec),
+        locale: const Locale('tr', 'TR'),
+        supportedLocales: const [Locale('tr', 'TR')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        builder: (context, child) => DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: spec.gradient.length == 1
+                  ? [spec.gradient.first, spec.gradient.first]
+                  : spec.gradient,
+            ),
+          ),
+          child: child,
+        ),
+        home: HomeShell(controller: controller, version: version),
+      );
+    },
   );
 }

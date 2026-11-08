@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gunluk_gorevler/src/app/settings.dart';
 import 'package:gunluk_gorevler/src/domain/local_date.dart';
 import 'package:gunluk_gorevler/src/domain/repeat_rule.dart';
 import 'package:gunluk_gorevler/src/domain/task.dart';
@@ -189,4 +190,58 @@ void main() {
       expect(await store.revealLocation(), isFalse);
     },
   );
+
+  test('downloadsDirectory picks Downloads, then İndirilenler, then home', () {
+    expect(
+      downloadsDirectory({'USERPROFILE': r'C:\Users\kullanici'}, 'windows'),
+      r'C:\Users\kullanici\Downloads',
+    );
+    expect(
+      downloadsDirectory(
+        {'HOME': '/h'},
+        'linux',
+        exists: (p) => p == '/h/İndirilenler',
+      ),
+      '/h/İndirilenler',
+    );
+    expect(
+      downloadsDirectory({'HOME': '/h'}, 'linux', exists: (_) => false),
+      '/h',
+    );
+  });
+
+  test('settings, export, import candidates and keep-before-import', () async {
+    final dir = await Directory.systemTemp.createTemp('gunluk_gorevler_sx');
+    addTearDown(() => dir.delete(recursive: true));
+    final sep = Platform.pathSeparator;
+    final down = '${dir.path}${sep}indirilenler';
+    final store = FileTaskStore('${dir.path}${sep}veri', downloads: () => down);
+
+    expect((await store.loadSettings()).themeId, 'diyar');
+    await store.saveSettings(
+      const AppSettings(themeId: 'orman', gameMode: false),
+    );
+    final back = await store.loadSettings();
+    expect(back.themeId, 'orman');
+    expect(back.gameMode, isFalse);
+
+    final now = DateTime(2026, 11, 7, 10, 5, 3);
+    final path = await store.exportBackup(sample('Yedek'), now: now);
+    expect(path, endsWith('gunluk-gorevler-yedek-2026-11-07-100503.json'));
+    await File('$down${sep}baska.json').writeAsString('{"x":1}');
+    await File('$down${sep}gorevler-bozuk.json').writeAsString('{');
+
+    final kept = await store.keepBeforeImport(sample('Önce'), now: now);
+    expect(kept, contains('ice-aktarma-oncesi'));
+
+    final found = await store.importCandidates();
+    expect(found.map((c) => c.name).toSet(), {
+      'gunluk-gorevler-yedek-2026-11-07-100503.json',
+      'gorevler-ice-aktarma-oncesi-2026-11-07-100503.json',
+    });
+    final read = await store.readCandidate(
+      found.firstWhere((c) => c.name.startsWith('gunluk')),
+    );
+    expect(read.tasks.single.title, 'Yedek');
+  });
 }

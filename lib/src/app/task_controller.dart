@@ -3,11 +3,13 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../domain/game.dart';
 import '../domain/local_date.dart';
 import '../domain/repeat_rule.dart';
 import '../domain/task.dart';
 import '../domain/task_data.dart';
 import '../storage/task_store.dart';
+import 'settings.dart';
 
 enum LoadState { loading, ready, unreadable }
 
@@ -50,7 +52,35 @@ class TaskController extends ChangeNotifier {
 
   DateTime now() => _clock();
 
+  AppSettings _settings = const AppSettings();
+  AppSettings get settings => _settings;
+
+  /// Changes and saves the settings (a failed save keeps them for now).
+  Future<void> updateSettings(AppSettings next) async {
+    _settings = next;
+    notifyListeners();
+    try {
+      await store.saveSettings(next);
+    } catch (e) {
+      _saveError = 'Ayarlar kaydedilemedi: $e';
+      notifyListeners();
+    }
+  }
+
+  GameProfile? _profile;
+  LocalDate? _profileDay;
+
+  /// XP, level, stats and badges for the current data (cached).
+  GameProfile get profile {
+    if (_profile == null || _profileDay != _today) {
+      _profile = GameProfile.of(_data, _today);
+      _profileDay = _today;
+    }
+    return _profile!;
+  }
+
   Future<void> load() async {
+    _settings = await store.loadSettings();
     final result = await store.load();
     switch (result) {
       case LoadMissing():
@@ -63,6 +93,7 @@ class TaskController extends ChangeNotifier {
         _loadError = message;
         _state = LoadState.unreadable;
     }
+    _profile = null;
     notifyListeners();
   }
 
@@ -71,6 +102,7 @@ class TaskController extends ChangeNotifier {
     final movedTo = await store.setAsideUnreadable(now: _clock());
     _loadError = null;
     _data = TaskData.empty;
+    _profile = null;
     _state = LoadState.ready;
     notifyListeners();
     return movedTo;
@@ -100,6 +132,9 @@ class TaskController extends ChangeNotifier {
     String note = '',
     required RepeatRule rule,
     required LocalDate start,
+    Difficulty difficulty = Difficulty.orta,
+    ClockTime? time,
+    List<String> steps = const [],
   }) {
     final from = rule is OnceRule ? rule.date : start;
     final task = Task(
@@ -109,6 +144,9 @@ class TaskController extends ChangeNotifier {
       schedule: [ScheduleSegment(from, rule)],
       createdAt: _clock().toUtc(),
       order: _data.nextOrder,
+      difficulty: difficulty,
+      time: time,
+      steps: _stepsFrom(steps, const []),
     );
     _apply(_data.withTask(task));
     return task;
@@ -130,8 +168,18 @@ class TaskController extends ChangeNotifier {
     required String title,
     String note = '',
     RepeatRule? rule,
+    Difficulty? difficulty,
+    ClockTime? Function()? time,
+    List<String>? steps,
   }) {
-    var task = _require(id).copyWith(title: title.trim(), note: note.trim());
+    final old = _require(id);
+    var task = old.copyWith(
+      title: title.trim(),
+      note: note.trim(),
+      difficulty: difficulty,
+      time: time,
+      steps: steps == null ? null : _stepsFrom(steps, old.steps),
+    );
     if (rule != null && rule != task.ruleOn(effectiveFrom(task, rule))) {
       task = task.withRuleFrom(effectiveFrom(task, rule), rule);
     }
@@ -176,6 +224,61 @@ class TaskController extends ChangeNotifier {
 
   void reorder(List<String> ids) => _apply(_data.reordered(ids));
 
+  /// Builds steps from titles, keeping the id of a step whose title is
+  /// unchanged (so its ticks stay).
+  List<TaskStep> _stepsFrom(List<String> titles, List<TaskStep> old) {
+    final pool = [...old];
+    final out = <TaskStep>[];
+    for (final raw in titles) {
+      final title = raw.trim();
+      if (title.isEmpty) continue;
+      final i = pool.indexWhere((s) => s.title == title);
+      if (i >= 0) {
+        out.add(pool.removeAt(i));
+      } else {
+        String id;
+        do {
+          id = 's${_random.nextInt(1 << 30).toRadixString(36)}';
+        } while (out.any((s) => s.id == id) || pool.any((s) => s.id == id));
+        out.add(TaskStep(id, title));
+      }
+    }
+    return out;
+  }
+
+  /// Ticks or unticks one step of [id] on [date]. Ticking the last open step
+  /// ticks the task; unticking a step of a ticked task unticks the task (it
+  /// is no longer fully done). Returns whether the task is now ticked.
+  bool toggleStep(String id, LocalDate date, String stepId) {
+    final task = _require(id);
+    if (date.isAfter(_today)) {
+      throw StateError('İleri bir gün işaretlenemez');
+    }
+    final on = !_data.stepsDone(id, date).contains(stepId);
+    var next = _data.withStepTick(id, date, stepId, on);
+    final allDone =
+        task.steps.isNotEmpty &&
+        next.stepsDone(id, date).length == task.steps.length;
+    if (on && allDone && !next.isDone(id, date)) {
+      next = next.withTick(id, date, _clock());
+    } else if (!on && next.isDone(id, date)) {
+      next = next.withTick(id, date, null);
+    }
+    _apply(next);
+    return next.isDone(id, date);
+  }
+
+  /// Exports the current data to a backup file; returns its path.
+  Future<String?> exportBackup() => store.exportBackup(_data, now: _clock());
+
+  /// Replaces everything with [imported], after keeping the current data
+  /// aside. Returns where the current data was kept.
+  Future<String?> importBackup(TaskData imported) async {
+    final kept = await store.keepBeforeImport(_data, now: _clock());
+    _apply(imported);
+    return kept;
+  }
+
   /// Puts back an earlier state (undo).
   void restore(TaskData snapshot) => _apply(snapshot);
 
@@ -195,6 +298,7 @@ class TaskController extends ChangeNotifier {
       throw StateError('Veri dosyası okunamadı; değişiklik yapılamaz');
     }
     _data = next;
+    _profile = null;
     notifyListeners();
     _pending = _save(next);
   }

@@ -12,11 +12,19 @@ class TaskDraft {
     required this.note,
     required this.rule,
     required this.start,
+    this.difficulty = Difficulty.orta,
+    this.time,
+    this.steps = const [],
   });
 
   final String title;
   final String note;
   final RepeatRule rule;
+  final Difficulty difficulty;
+  final ClockTime? time;
+
+  /// Step titles in order (empty lines dropped).
+  final List<String> steps;
 
   /// First day (new tasks only; a one-off starts on its own date).
   final LocalDate start;
@@ -95,6 +103,9 @@ class _TaskEditorState extends State<_TaskEditor> {
   late Set<int> _weekdays;
   late LocalDate _onceDate;
   late LocalDate _start;
+  late Difficulty _difficulty;
+  ClockTime? _time;
+  late final TextEditingController _steps;
   String? _error;
 
   bool get _isNew => widget.existing == null;
@@ -105,6 +116,11 @@ class _TaskEditorState extends State<_TaskEditor> {
     final t = widget.existing;
     _title = TextEditingController(text: t?.title ?? widget.initialTitle);
     _note = TextEditingController(text: t?.note ?? '');
+    _difficulty = t?.difficulty ?? Difficulty.orta;
+    _time = t?.time;
+    _steps = TextEditingController(
+      text: t?.steps.map((s) => s.title).join('\n') ?? '',
+    );
     final rule =
         widget.initialRule ??
         (t == null
@@ -130,6 +146,7 @@ class _TaskEditorState extends State<_TaskEditor> {
   void dispose() {
     _title.dispose();
     _note.dispose();
+    _steps.dispose();
     super.dispose();
   }
 
@@ -156,6 +173,12 @@ class _TaskEditorState extends State<_TaskEditor> {
         note: _note.text.trim(),
         rule: rule,
         start: _start,
+        difficulty: _difficulty,
+        time: _time,
+        steps: [
+          for (final l in _steps.text.split('\n'))
+            if (l.trim().isNotEmpty) l.trim(),
+        ],
       ),
     );
   }
@@ -192,6 +215,69 @@ class _TaskEditorState extends State<_TaskEditor> {
               maxLines: 3,
               decoration: const InputDecoration(
                 labelText: 'Not (isteğe bağlı)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Zorluk', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            SegmentedButton<Difficulty>(
+              key: const Key('editor-difficulty'),
+              showSelectedIcon: false,
+              segments: [
+                for (final d in Difficulty.values)
+                  ButtonSegment(
+                    value: d,
+                    label: Text('${d.label} · ${d.baseXp} XP'),
+                  ),
+              ],
+              selected: {_difficulty},
+              onSelectionChanged: (v) => setState(() => _difficulty = v.first),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const SizedBox(width: 90, child: Text('Hatırlatma')),
+                OutlinedButton.icon(
+                  key: const Key('editor-time'),
+                  icon: const Icon(Icons.schedule, size: 18),
+                  label: Text(_time?.format() ?? 'Saat yok'),
+                  onPressed: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(
+                        hour: _time?.hour ?? 9,
+                        minute: _time?.minute ?? 0,
+                      ),
+                      cancelText: 'İptal',
+                      confirmText: 'Seç',
+                      helpText: 'Hatırlatma saati',
+                    );
+                    if (picked != null) {
+                      setState(
+                        () => _time = ClockTime(picked.hour, picked.minute),
+                      );
+                    }
+                  },
+                ),
+                if (_time != null)
+                  IconButton(
+                    key: const Key('editor-time-clear'),
+                    tooltip: 'Saati kaldır',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _time = null),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('editor-steps'),
+              controller: _steps,
+              minLines: 1,
+              maxLines: 6,
+              decoration: const InputDecoration(
+                labelText: 'Adımlar (isteğe bağlı, her satıra bir adım)',
+                hintText: 'Isın\nKoş\nEsne',
                 border: OutlineInputBorder(),
               ),
             ),

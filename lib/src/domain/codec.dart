@@ -5,7 +5,10 @@ import 'task.dart';
 import 'task_data.dart';
 
 /// Version of the file format this code writes and reads.
-const int schemaVersion = 1;
+/// Version 2 adds difficulty, reminder time and steps to tasks, and
+/// `step_ticks`. Version 1 files are read with the defaults (orta, no time,
+/// no steps).
+const int schemaVersion = 2;
 
 /// The file holds a newer format than this app understands. The file is
 /// left untouched.
@@ -37,6 +40,12 @@ String encodeTaskData(TaskData data, {required DateTime savedAt}) {
     'saved_at': savedAt.toUtc().toIso8601String(),
     'tasks': [for (final t in data.tasks) t.toJson()],
     'completions': completions,
+    'step_ticks': [
+      for (final t in data.stepTicks.entries)
+        for (final d in (t.value.keys.toList()..sort()))
+          for (final id in (t.value[d]!.toList()..sort()))
+            {'task_id': t.key, 'date': d.toIso(), 'step_id': id},
+    ],
   });
 }
 
@@ -97,5 +106,26 @@ TaskData decodeTaskData(String text) {
     )] = DateTime.parse(at)
         .toUtc();
   }
-  return TaskData(tasks: tasks, completions: completions);
+  final rawSteps = root['step_ticks'] ?? const <Object?>[];
+  if (rawSteps is! List<Object?>) {
+    throw const FormatException('Adım işaretleri liste olmalı');
+  }
+  final stepTicks = <String, Map<LocalDate, Set<String>>>{};
+  for (final raw in rawSteps) {
+    if (raw is! Map<String, Object?> ||
+        raw['task_id'] is! String ||
+        raw['date'] is! String ||
+        raw['step_id'] is! String) {
+      throw const FormatException('Adım işareti bozuk');
+    }
+    final id = raw['task_id']! as String;
+    if (!ids.contains(id)) {
+      throw FormatException('Adım işareti olmayan bir göreve ait', id);
+    }
+    stepTicks
+        .putIfAbsent(id, () => {})
+        .putIfAbsent(LocalDate.parse(raw['date']! as String), () => {})
+        .add(raw['step_id']! as String);
+  }
+  return TaskData(tasks: tasks, completions: completions, stepTicks: stepTicks);
 }

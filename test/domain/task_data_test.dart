@@ -199,7 +199,7 @@ void main() {
       final text = encodeTaskData(
         data,
         savedAt: at,
-      ).replaceFirst('"schema_version": 1', '"schema_version": 2');
+      ).replaceFirst('"schema_version": 2', '"schema_version": 3');
       expect(() => decodeTaskData(text), throwsA(isA<NewerSchemaException>()));
     });
 

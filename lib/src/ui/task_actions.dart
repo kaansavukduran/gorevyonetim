@@ -47,6 +47,9 @@ Future<void> addTaskWithEditor(
     note: draft.note,
     rule: draft.rule,
     start: draft.start,
+    difficulty: draft.difficulty,
+    time: draft.time,
+    steps: draft.steps,
   );
 }
 
@@ -68,6 +71,9 @@ Future<void> editTask(
     title: draft.title,
     note: draft.note,
     rule: draft.rule,
+    difficulty: draft.difficulty,
+    time: () => draft.time,
+    steps: draft.steps,
   );
 }
 
@@ -96,7 +102,14 @@ Future<void> restartTask(
   );
   if (draft == null) return;
   controller.restartTask(task.id, draft.rule);
-  controller.updateTask(task.id, title: draft.title, note: draft.note);
+  controller.updateTask(
+    task.id,
+    title: draft.title,
+    note: draft.note,
+    difficulty: draft.difficulty,
+    time: () => draft.time,
+    steps: draft.steps,
+  );
 }
 
 Future<void> deleteTask(
