@@ -15,6 +15,8 @@ class CharacterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = controller.profile;
+    final book = controller.quests;
+    final cls = charClassById(controller.settings.charClass);
     final theme = Theme.of(context);
     final style = GameStyle.of(context);
     final stats = <(IconData, String, String, String)>[
@@ -49,6 +51,12 @@ class CharacterPage extends StatelessWidget {
         '${p.totalDone}',
         'İşaretlediğin tüm görev günleri',
       ),
+      (
+        Icons.savings,
+        'Altın',
+        '${book.gold}',
+        'Günlük görevler ve haftalık meydan okumadan (${book.questsDone} görev)',
+      ),
     ];
 
     return Align(
@@ -66,7 +74,7 @@ class CharacterPage extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    LevelBadge(level: p.level, size: 92),
+                    LevelBadge(level: p.level, size: 92, icon: cls.icon),
                     const SizedBox(width: 20),
                     Expanded(
                       child: Column(
@@ -79,6 +87,11 @@ class CharacterPage extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                               color: style.xp,
                             ),
+                          ),
+                          Text(
+                            '${cls.name} · ${cls.motto}',
+                            key: const Key('character-class'),
+                            style: theme.textTheme.bodyMedium,
                           ),
                           Text(
                             'Seviye ${p.level} · toplam ${p.totalXp} XP',
@@ -152,6 +165,42 @@ class CharacterPage extends StatelessWidget {
                   ],
                 );
               },
+            ),
+            const SizedBox(height: 20),
+            Text('Sınıf', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final c in charClasses)
+                  ChoiceChip(
+                    key: Key('class-${c.id}'),
+                    avatar: Icon(c.icon, size: 18),
+                    label: Text(c.name),
+                    selected: c.id == cls.id,
+                    onSelected: (_) => controller.updateSettings(
+                      controller.settings.copyWith(charClass: c.id),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Sınıf yalnızca görünüşü değiştirir; kurallar herkes için aynı.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 20),
+            Text('Son 26 hafta', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: ActivityHeatmap(
+                  data: controller.data,
+                  today: controller.today,
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             Row(

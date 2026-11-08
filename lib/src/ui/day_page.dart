@@ -63,7 +63,10 @@ class DayPage extends StatelessWidget {
                     HeroStrip(
                       profile: controller.profile,
                       onTap: onOpenCharacter,
+                      icon: charClassById(controller.settings.charClass).icon,
                     ),
+                    const SizedBox(height: 10),
+                    QuestCard(book: controller.quests),
                     const SizedBox(height: 14),
                   ],
                   _DayTitle(day: day, today: today, onDayChanged: onDayChanged),

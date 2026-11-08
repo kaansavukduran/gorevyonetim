@@ -2,7 +2,11 @@ import 'dart:convert';
 
 /// Choices that belong to this device, kept apart from the tasks.
 class AppSettings {
-  const AppSettings({this.themeId = 'diyar', this.gameMode = true});
+  const AppSettings({
+    this.themeId = 'diyar',
+    this.gameMode = true,
+    this.charClass = 'savasci',
+  });
 
   /// One of the ids in `appThemes` (unknown ids fall back to the default).
   final String themeId;
@@ -10,10 +14,15 @@ class AppSettings {
   /// XP, levels, stats and badges on screen. Off shows a plain list.
   final bool gameMode;
 
-  AppSettings copyWith({String? themeId, bool? gameMode}) => AppSettings(
-    themeId: themeId ?? this.themeId,
-    gameMode: gameMode ?? this.gameMode,
-  );
+  /// Cosmetic character class (emblem and motto only; no rule changes).
+  final String charClass;
+
+  AppSettings copyWith({String? themeId, bool? gameMode, String? charClass}) =>
+      AppSettings(
+        themeId: themeId ?? this.themeId,
+        gameMode: gameMode ?? this.gameMode,
+        charClass: charClass ?? this.charClass,
+      );
 
   String encode() =>
       const JsonEncoder.withIndent('  ')
@@ -28,6 +37,7 @@ class AppSettings {
       return AppSettings(
         themeId: j['theme'] is String ? j['theme']! as String : 'diyar',
         gameMode: j['game_mode'] is bool ? j['game_mode']! as bool : true,
+        charClass: j['class'] is String ? j['class']! as String : 'savasci',
       );
     } on FormatException {
       return const AppSettings();

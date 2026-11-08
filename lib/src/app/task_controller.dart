@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../domain/game.dart';
 import '../domain/local_date.dart';
+import '../domain/quests.dart';
 import '../domain/repeat_rule.dart';
 import '../domain/task.dart';
 import '../domain/task_data.dart';
@@ -79,6 +80,18 @@ class TaskController extends ChangeNotifier {
     return _profile!;
   }
 
+  QuestBook? _quests;
+  LocalDate? _questsDay;
+
+  /// Daily quest, weekly challenge and gold for the current data (cached).
+  QuestBook get quests {
+    if (_quests == null || _questsDay != _today) {
+      _quests = QuestBook.of(_data, _today);
+      _questsDay = _today;
+    }
+    return _quests!;
+  }
+
   Future<void> load() async {
     _settings = await store.loadSettings();
     final result = await store.load();
@@ -94,6 +107,7 @@ class TaskController extends ChangeNotifier {
         _state = LoadState.unreadable;
     }
     _profile = null;
+    _quests = null;
     notifyListeners();
   }
 
@@ -103,6 +117,7 @@ class TaskController extends ChangeNotifier {
     _loadError = null;
     _data = TaskData.empty;
     _profile = null;
+    _quests = null;
     _state = LoadState.ready;
     notifyListeners();
     return movedTo;
@@ -299,6 +314,7 @@ class TaskController extends ChangeNotifier {
     }
     _data = next;
     _profile = null;
+    _quests = null;
     notifyListeners();
     _pending = _save(next);
   }

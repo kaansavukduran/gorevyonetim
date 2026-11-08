@@ -32,13 +32,13 @@ import -window root "$OUT/1-first-start.png"
 if [ -e "$DATA/gorevler.json" ]; then echo "FAIL: first start wrote a file"; exit 1; fi
 echo "PASS: first start wrote nothing"
 
-# The quick-add field sits under the hero strip and the week strip.
-xdotool mousemove 520 322 click 1
+# The quick-add field sits under the hero strip, the quest board and the week strip.
+xdotool mousemove 520 426 click 1
 sleep 0.5
 xdotool type --delay 40 "Su ic"
 xdotool key Return
 sleep 1.5
-xdotool mousemove 290 471 click 1
+xdotool mousemove 290 575 click 1
 sleep 1.5
 import -window root "$OUT/2-added-and-ticked.png"
 stop_app

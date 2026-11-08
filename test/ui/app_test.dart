@@ -588,6 +588,11 @@ void main() {
         tester.widget<Text>(find.byKey(const Key('stat-Toplam başarı'))).data,
         '1',
       );
+      await tester.dragUntilVisible(
+        find.byKey(const Key('badge-ilk-adim')),
+        find.byType(ListView).first,
+        const Offset(0, -300),
+      );
       expect(find.byKey(const Key('badge-ilk-adim')), findsOneWidget);
     });
 
@@ -747,5 +752,46 @@ void main() {
     await tester.pump(const Duration(seconds: 31));
     await tester.pump();
     expect(find.byKey(const Key('reminder')), findsNothing);
+  });
+
+  group('quests', () {
+    testWidgets('the quest board shows today and the week; a perfect day '
+        'throws confetti', (tester) async {
+      final h = await pumpApp(
+        tester,
+        seed: (c) => c.addTask(
+          title: 'Su',
+          rule: const DailyRule(),
+          start: d('2026-11-07'),
+        ),
+      );
+      expect(find.byKey(const Key('quest-card')), findsOneWidget);
+      expect(find.byKey(const Key('quest-today')), findsOneWidget);
+      expect(
+        find.textContaining('Haftalık: Bu hafta 5 mükemmel gün'),
+        findsOneWidget,
+      );
+      await tester.tap(checkOf(h.controller.data.tasks.single.id));
+      await tester.pump();
+      expect(find.byKey(const Key('confetti')), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('confetti')), findsNothing);
+    });
+
+    testWidgets('the class changes the emblem and is saved', (tester) async {
+      final h = await pumpApp(tester);
+      await tester.tap(find.text('Karakter'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Savaşçı ·'), findsOneWidget);
+      await tester.dragUntilVisible(
+        find.byKey(const Key('class-buyucu')),
+        find.byType(ListView).first,
+        const Offset(0, -200),
+      );
+      await tester.tap(find.byKey(const Key('class-buyucu')));
+      await tester.pumpAndSettle();
+      expect(h.store.settings.charClass, 'buyucu');
+      expect(find.byKey(const Key('heatmap')), findsOneWidget);
+    });
   });
 }

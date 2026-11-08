@@ -8,7 +8,8 @@ Windows, macOS ve Linux için her gün tik atılan görev listesi (Google Tasks 
 - **Görev ayrıntıları**: not, belirli günler, başlangıç, **zorluk** (Kolay 10 / Orta 20 / Zor 35 XP), **hatırlatma saati** (uygulama açıkken saati gelince haber verir, geçen saat kırmızı görünür) ve **adımlar** (her adımı işaretle; sonuncusu görevi bitirir).
 - **Görevler**: tümü, son 30 gün ve seri; tıkla düzenle, sürükle sırala, sonlandır ya da sil (geri alınabilir).
 - **Kontrol**: görev × gün tablosu (7 / 14 / 30 gün), hücreye tıklayıp düzelt.
-- **Karakter** (oyun modu): seviye ve unvan (Çaylak → Ölümsüz), statlar (İrade, Disiplin, Dayanıklılık, Cesaret, Odak, Toplam başarı), 14 rozet, "Nasıl XP kazanırım?".
+- **Görevler tahtası** (oyun modu, Gün ekranında): her gün tarihe göre değişen bir günlük görev (3 görev bitir, öğleden önce 2 görev, tüm günü bitir, bir zor görev) ve haftalık meydan okuma (5 mükemmel gün). Ödül **Altın**; yalnızca kendi gününde yapılan işaretler sayılır. Mükemmel günde konfeti.
+- **Karakter** (oyun modu): seviye ve unvan (Çaylak → Ölümsüz), sınıf (Savaşçı, Büyücü, Okçu, Şifacı; yalnızca görünüş), statlar (İrade, Disiplin, Dayanıklılık, Cesaret, Odak, Toplam başarı, Altın), son 26 haftanın etkinlik haritası, 14 rozet, "Nasıl XP kazanırım?".
 - **Ayarlar**: 6 tema (Fantastik Diyar, Neon Şehir, Orman Ruhu, Pastel Rüya, Gece Yarısı, Sade), oyun modu aç/kapat, yedeği dışa/içe aktar, veri klasörünü aç.
 
 Oyun kuralları: XP her zaman tik geçmişinden yeniden hesaplanır (saklanmaz, kendiliğinden artmaz). Kendi gününde işaretleme +5 XP ve seri bonusu (+2/gün, en fazla +20) getirir; sonradan işaretlenen gün yalnızca temel XP alır. Bir günün tüm görevleri bitince mükemmel gün: +25 XP, +1 İrade. Seviye n'den n+1'e: 100 + 40·(n−1) XP.
