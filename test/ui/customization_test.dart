@@ -185,10 +185,7 @@ void main() {
     tester,
   ) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
-        const FakeAccessibilityFeatures(
-          disableAnimations: true,
-          reduceMotion: true,
-        );
+        const FakeAccessibilityFeatures(reduceMotion: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     final h = await pumpApp(
       tester,
