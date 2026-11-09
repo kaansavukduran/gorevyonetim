@@ -62,8 +62,13 @@ class Driver:
     def adb(self, *args, check=True, binary=False):
         result = subprocess.run(
             ["adb", "-s", self.serial, *args], capture_output=True, timeout=25,
-            check=check,
         )
+        if check and result.returncode:
+            raise RuntimeError(
+                f"adb {args!r} exited {result.returncode}: "
+                f"{result.stdout.decode('utf-8', errors='replace')} "
+                f"{result.stderr.decode('utf-8', errors='replace')}"
+            )
         return result.stdout if binary else result.stdout.decode("utf-8", errors="replace")
 
     def xml(self):
@@ -82,20 +87,31 @@ class Driver:
         (self.out / f"{label}.xml").write_text(xml, encoding="utf-8")
         (self.out / f"{label}.png").write_bytes(self.adb("exec-out", "screencap", "-p", binary=True))
 
-    def run(self):
-        self.adb("wait-for-device")
-        self.adb("shell", "mkdir", "-p", "/sdcard/Download")
-        # Only the disposable emulator's shared Downloads is used for fixtures.
+    def prepare_fixtures(self):
+        # The app marker proves installation/startup finished. A newly booted
+        # emulator can report boot_complete before shared storage is writable.
         for name, content in {
             "gunluk-gorevler-gecersiz.json": b"{bozuk json",
             "gunluk-gorevler-bozuk-utf8.json": b"\xff\xfe\x80",
         }.items():
             fixture = self.out / name
             fixture.write_bytes(content)
-            self.adb("push", str(fixture), f"/sdcard/Download/{name}")
+            for attempt in range(15):
+                try:
+                    self.adb("shell", "mkdir", "-p", "/sdcard/Download")
+                    self.adb("push", str(fixture), f"/sdcard/Download/{name}")
+                    break
+                except RuntimeError as error:
+                    print(f"Downloads readiness attempt {attempt + 1}: {error}", flush=True)
+                    if attempt == 14:
+                        raise
+                    time.sleep(2)
+
+    def run(self):
+        self.adb("wait-for-device")
         deadline, last_request, phase_start = time.monotonic() + 900, None, None
         saved_evidence, last_tap = set(), 0
-        exported = None
+        exported, fixtures_ready = None, False
         while time.monotonic() < deadline:
             raw = self.adb("shell", "run-as", APP, "cat", "files/picker-e2e-control.json", check=False)
             try:
@@ -106,6 +122,9 @@ class Driver:
             if marker.get("runId") != self.run_id:
                 time.sleep(1)
                 continue
+            if not fixtures_ready:
+                self.prepare_fixtures()
+                fixtures_ready = True
             request_id, step = marker["requestId"], marker["step"]
             if request_id != last_request:
                 print(f"Picker phase {request_id}: {step} {marker.get('fileName') or ''}", flush=True)

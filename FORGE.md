@@ -15,6 +15,7 @@ Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliğ
 - [x] Telefon düzeni, iptal, özel alan ve kaydedilmiş dosyayı koruma regresyonları; iki arayüz mutasyonu yakalandı ve geri alındı. Üç standart Python testi ADB sürücüsünün yalnız gözlenen DocumentsUI denetimlerine dokunduğunu denetler.
 - [ ] Yeni entegrasyon testi ve standart kitaplıklı ADB sürücüsü GitHub Android 35 emülatöründe gerçek sistem seçicisini açacak: dışa aktar, yeniden seç, Türkçe not/saat/adım/tik turu; iki işlemde iptal; bozuk JSON/UTF-8 reddi. Henüz başarılı cihaz sonucu olarak işaretlenmedi. XML/ekran/log kanıtları Actions artefaktına alınır.
 - [ ] 1.2.1 dört platform derlemesi ve yayın doğrulaması bekliyor.
+- Derleme 13: Linux işi başarılı; Android test sürücüsü uygulama kurulmadan önce örnek JSON'u emülatörün paylaşılan alanına aktarırken durdu, seçici testi henüz çalışmadı. Yayın yok. Hazırlık uygulamanın gerçek başlangıç işaretinden sonraya alındı; sınırlı hazırlık beklemesi ve ADB stderr kaydı eklendi. Başarı iddiası yeni cihaz sonucu bekliyor.
 
 ## Yeni kullanıcı isteği: 1.2.0 turu
 
