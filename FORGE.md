@@ -4,7 +4,7 @@ Son çalışma: 9 Kasım 2026, 1.2.1 Android yedekleme güvenilirliği turu. Tek
 
 ## Çalışma durumu
 
-Aktif çalışma kilidi yok. 9 Kasım 2026 1.2.1 turu tamamlandı ve kilit kaldırıldı. Yeni tur başlamadan önce güncel main, açık PR’lar, Actions ve bu kontrol noktasını oku. Saatlik otomasyon açık kabul maddeleri nedeniyle etkin kalır.
+9 Kasım 2026 15.40 Europe/Istanbul: kullanıcının Aion, Baykuş Ömer, koyun ve kurt karakterlerini ekleme, Türkçe/İngilizce karakter akışı ve Drive yedeği üzerinde canlı çalışma var. Kilit 9 Kasım 2026 18.00 Europe/Istanbul’a kadar geçerli. Başka tur kaynak kodunu değiştirmeden sonraki tura bırakmalı. Bu tur tamamlanınca kilit kaldırılır.
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
 
