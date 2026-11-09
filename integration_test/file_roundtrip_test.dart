@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gunluk_gorevler/src/app/task_controller.dart';
 import 'package:gunluk_gorevler/src/app/settings.dart';
@@ -37,12 +38,25 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
     final id = first.data.tasks.single.id;
-    await tester.dragUntilVisible(
-      find.byKey(Key('task-check-$id')),
-      find.byType(CustomScrollView),
-      const Offset(0, -150),
-    );
+    // Dismiss the real device IME before leaving the quick-add field. Its
+    // caret visibility animation must not scroll back while locating the task.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
+    final check = find.byKey(Key('task-check-$id'));
+    for (var attempt = 0; attempt < 30; attempt++) {
+      if (check.evaluate().isNotEmpty) {
+        await Scrollable.ensureVisible(tester.element(check), alignment: 0.5);
+        await tester.pumpAndSettle();
+        if (check.hitTestable().evaluate().isNotEmpty) {
+          break;
+        }
+      }
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -120));
+      await tester.pumpAndSettle();
+    }
+    expect(check.hitTestable(), findsOneWidget);
     await tester.tap(find.byKey(Key('task-check-$id')));
     await tester.pumpAndSettle();
     await first.saved;

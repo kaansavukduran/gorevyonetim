@@ -4,7 +4,7 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 
 ## Aktif çalışma kilidi
 
-9 Kasım 2026 13.25 Europe/Istanbul: kullanıcının yeni isteği üzerinde canlı Codex çalışması sürüyor: Gün ekranında fareyle sıralama, kolay saat girişi, renk seçicili ayrıntılı tema. Kilit 9 Kasım 2026 14.30 Europe/Istanbul’a kadar geçerli. Bu süre içinde saatlik tur kaynak kodunu değiştirmeden sonraki tura bırakmalı; ana çalışma sonunda kilit kaldırılır.
+9 Kasım 2026 13.25 Europe/Istanbul: kullanıcının yeni isteği üzerinde canlı Codex çalışması sürüyor: Gün ekranında fareyle sıralama, kolay saat girişi, renk seçicili ayrıntılı tema. Kilit 9 Kasım 2026 15.30 Europe/Istanbul’a kadar geçerli. Bu süre içinde saatlik tur kaynak kodunu değiştirmeden sonraki tura bırakmalı; ana çalışma sonunda kilit kaldırılır.
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
 
@@ -20,6 +20,7 @@ Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliğ
 - Derleme 10, son erişilebilirlik ekinde atlanan bir `curly_braces_in_flow_control_structures` biçim kuralı yüzünden durdu; yayınlanmadı. Düzeltme sonrası yerel analiz temiz ve yalnız `reduceMotion` açık regresyon testi başarılı; derleme 11 izleniyor.
 - [x] Sistem `reduceMotion` ve `disableAnimations` bayrakları ayrı ayrı ele alınır; yalnız `reduceMotion` açıkken de kutlama engellenir. Bu regresyon test ve mutasyonla doğrulandı.
 - [x] Chromium/Playwright: doğrudan %137, HEX ile `#10B981` uygulama ve 390 pikselde renk seçici açılışı doğrulandı; tarayıcı hatası yok.
+- Android derleme 11: cihaz içi yeni ayar kaydı/yeniden açılış testi geçti. Diğer entegrasyon testinde açık gerçek IME/varsayılan üst hizalama nedeniyle görev işaretçisi görünür alandan kaydı. Test, klavyeyi kapatıp satırı ortalayarak gerçek hit-test görünürlüğünü denetleyecek biçimde düzeltildi; ürünün masaüstü/klavye odağı davranışı değiştirilmedi.
 - [ ] 1.2.0 için dört platformun CI derlemesini ve numaralı Releases kaydını doğrula. Önceki 1.1.0 sürümünü yeni özellikler içeriyor diye sunma.
 
 ## Önceki turun kabul ölçütleri ve durum
