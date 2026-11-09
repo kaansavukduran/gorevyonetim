@@ -12,7 +12,7 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 - [x] Android proje ve yerel özel veri klasörü: sistem dosya seçicisiyle JSON dışa/içe aktarım; depolama izni veya yeni üçüncü taraf uygulama paketi yok. Geçersiz yedek mevcut listeye dokunmaz.
 - [ ] Windows EXE/ZIP, macOS DMG/ZIP, Linux tar.gz ve Android APK'nın bu commit için GitHub Actions'ta başarılı derlemesi ve numaralı Releases kaydı: gönderim sonrası sonucu doğrula.
 - [ ] Android yerel dosya seçicisini emülatörde/cihazda uçtan uca doğrula: dosya yaz, yeniden seç, Türkçe içerik ve iptali dene. MethodChannel sınırı birim testlidir; gerçek seçici henüz elle denenmedi.
-- [ ] Android kalıcı dağıtım imzası ve güncelleme testi: şimdilik test anahtarıyla imzalı önizleme; farklı derlemeler arasında doğrudan güncelleme garantisi yok. İmzalama sırrını koda/artefakta koyma; kullanıcıya ait kalıcı anahtarın güvenli depo secrets yapılandırması gerekiyor.
+- [ ] Android kalıcı dağıtım imzası ve güncelleme testi: şimdilik test anahtarıyla imzalı önizleme; farklı derlemeler arasında doğrudan güncelleme garantisi yok. İmzalama sırrını koda/artefakta koyma; kullanıcıya ait kalıcı anahtarın güvenli depo secrets yapılandırması gerekiyor. Bağlı GitHub entegrasyonuyla repo secrets listesi denendi: HTTP 403 `Resource not accessible by integration`. Bu izin değişmeden aynı isteği tekrar tekrar deneme; önizleme paketi bu engelden bağımsız üretilebilir.
 - [ ] Son cihaz kabul turu: Windows kurulum/yükseltme, macOS açılış, Linux açılış ve Android telefon üzerinde görev/yedek/görünüm akışlarının sonuçlarını kaydet. CI açılış kontrolünü elle cihaz kabulü gibi sunma.
 
 ## Bu turun doğrulaması
