@@ -103,6 +103,12 @@ class FileTaskStore implements TaskStore {
   bool get persistent => true;
 
   @override
+  bool get canRevealLocation => true;
+
+  @override
+  bool get usesSystemFilePicker => false;
+
+  @override
   Future<LoadResult> load() async {
     if (!await file.exists()) return const LoadMissing();
     final String text;

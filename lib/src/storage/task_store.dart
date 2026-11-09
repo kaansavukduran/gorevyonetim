@@ -33,6 +33,12 @@ abstract class TaskStore {
   /// Whether the data survives a restart of the app.
   bool get persistent;
 
+  /// Whether the system file manager can show this store's folder.
+  bool get canRevealLocation;
+
+  /// Import/export opens a native document picker rather than scanning Downloads.
+  bool get usesSystemFilePicker;
+
   Future<LoadResult> load();
 
   /// Replaces the saved data with [data]. Throws when it cannot be written;

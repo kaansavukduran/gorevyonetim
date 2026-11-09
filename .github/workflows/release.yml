@@ -13,7 +13,7 @@ on:
 
 env:
   FLUTTER_VERSION: "3.47.6"
-  APP_VERSION: "1.2.0"
+  APP_VERSION: "1.2.1"
 
 permissions:
   contents: read
@@ -171,6 +171,7 @@ jobs:
           cache: true
       - name: Test shared application code
         run: |
+          python3 -m unittest discover -s tool -p 'test_*.py'
           flutter pub get --enforce-lockfile
           dart format --output=none --set-exit-if-changed lib test integration_test
           flutter analyze
@@ -180,14 +181,20 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Android device storage and task round trip
+      - name: Android storage, real document picker and task round trip
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: flutter test integration_test -d emulator-5554
+          script: bash tool/android_picker_smoke.sh "$RUNNER_TEMP/android-picker"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-picker-evidence
+          path: ${{ runner.temp }}/android-picker
+          if-no-files-found: warn
       - name: Build preview APK
         run: |
           flutter build apk --release --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ env.APP_VERSION }}+${{ github.run_number }}
@@ -217,11 +224,7 @@ jobs:
       - name: Release notes
         run: |
           cat > notes.md <<'NOTES'
-          Görevleri Gün ekranında farenin sol tuşuyla soldaki tutamaçtan yukarı/aşağı sürükleyerek sırala. Manuel sıra kalıcıdır; "Saate göre" seçeneği ayrıdır. Görev kartından ve hızlı eklemeden 24 saat biçiminde saat gir, değiştir veya kaldır.
-
-          Arayüz ölçeği artık %1 adımlı kaydırma çubuğu, doğrudan yüzde girişi ve anlık örnek önizlemesi içerir. Özel temada altı bağımsız renk, renk alanı/ton/RGB/HEX seçici, açık-koyu görünüm, hassas kart köşesi ve başlık/parlama ayarları vardır.
-
-          Oyun modu: ayarlanabilir günlük görev hedefi ve gerçek tiklerden hesaplanan ilerleme; hedefe ulaşınca kutlama. Hedefi/temayı değiştirmek XP kazandırmaz. Kutlama efektleri kapatılabilir ve cihazın hareket azaltma tercihi korunur.
+          Android yedekleme arayüzü sadeleştirildi: dosya seçicisinden kaydetme/açma yönlendirmesi ve uygulamayı kaldırmadan önce yedek alma açıklaması. Kullanılamayan klasör düğmesi ve özel iç dosya yolu gösterilmez. Seçici İndirilenler klasöründen başlar; başka konumlar seçilebilir. Boş seçimi iptal etmek yanıltıcı "yedek bulunamadı" penceresi açmaz.
 
           **Windows:** `Gunluk-Gorevler-Windows-Kurulum.exe` kurar (Başlat menüsü, isteğe bağlı masaüstü kısayolu). Kurulumsuz: `Gunluk-Gorevler-Windows-portable.zip` aç, `gunluk_gorevler.exe`. SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır.
 
@@ -233,7 +236,7 @@ jobs:
 
           Görevler cihazında saklanır. Masaüstü paketleri kod imzası içermez. Android APK test imzalıdır. SHA-256 değerleri `SHA256SUMS.txt` içinde.
 
-          Bu paketler aynı commit'ten, dört platformun kontrolleri başarılı olduktan sonra yayımlanır. Android emülatör testi cihaz içi veri ve yeniden açılış kontrolünü kapsar; yerel dosya seçicisi elle cihaz kontrolü bekliyor.
+          Bu paketler aynı commit'ten, dört platformun kontrolleri başarılı olduktan sonra yayımlanır. Android 35 emülatöründe gerçek sistem dosya seçicisiyle JSON yazma/yeniden seçme, Türkçe metin, saat/not/adım/tik korunması, dışa/içe aktarımı iptal etme, bozuk JSON ve UTF-8 reddi doğrulanır. Fiziksel telefon kabulü ve kalıcı dağıtım imzası bekliyor.
           NOTES
       - name: Publish the downloads
         env:

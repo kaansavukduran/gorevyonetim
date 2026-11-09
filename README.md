@@ -13,7 +13,7 @@ Windows, macOS, Linux ve Android için her gün tik atılan görev listesi (Goog
 - **Kontrol**: görev × gün tablosu (7 / 14 / 30 gün), hücreye tıklayıp düzelt.
 - **Görevler tahtası** (oyun modu, Gün ekranında): her gün tarihe göre değişen bir günlük görev (3 görev bitir, öğleden önce 2 görev, tüm günü bitir, bir zor görev) ve haftalık meydan okuma (5 mükemmel gün). Ödül **Altın**; yalnızca kendi gününde yapılan işaretler sayılır. Mükemmel günde konfeti.
 - **Karakter** (oyun modu): seviye ve unvan (Çaylak → Ölümsüz), sınıf (Savaşçı, Büyücü, Okçu, Şifacı; yalnızca görünüş), statlar (İrade, Disiplin, Dayanıklılık, Cesaret, Odak, Toplam başarı, Altın), son 26 haftanın etkinlik haritası, 14 rozet, "Nasıl XP kazanırım?".
-- **Ayarlar**: %80–%200 arayüz ölçeği için %1 adımlı çubuk, yüzde girişi ve anlık örnek; dar ekranlarda büyütme sınırlandırılır. 6 hazır tema (Fantastik Diyar, Neon Şehir, Orman Ruhu, Pastel Rüya, Gece Yarısı, Sade), oyun modu aç/kapat, yedeği dışa/içe aktar, veri klasörünü aç.
+- **Ayarlar**: %80–%200 arayüz ölçeği için %1 adımlı çubuk, yüzde girişi ve anlık örnek; dar ekranlarda büyütme sınırlandırılır. 6 hazır tema (Fantastik Diyar, Neon Şehir, Orman Ruhu, Pastel Rüya, Gece Yarısı, Sade), oyun modu aç/kapat, yedeği dışa/içe aktar, masaüstünde veri klasörünü aç. Android özel veri alanını ve uygulamayı kaldırmadan önce yedek alma gereğini açıklar.
 
 Oyun kuralları: XP her zaman tik geçmişinden yeniden hesaplanır (saklanmaz, kendiliğinden artmaz). Kendi gününde işaretleme +5 XP ve seri bonusu (+2/gün, en fazla +20) getirir; sonradan işaretlenen gün yalnızca temel XP alır. Bir günün tüm görevleri bitince mükemmel gün: +25 XP, +1 İrade. Seviye n'den n+1'e: 100 + 40·(n−1) XP.
 
@@ -29,7 +29,7 @@ Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+
 
 ## İndirme
 
-[Releases sayfasındaki](https://github.com/kaansavukduran/gorevyonetim/releases) en yeni **v1.2.0-build.N** ön sürümü (önceki sürümler korunur):
+[Releases sayfasındaki](https://github.com/kaansavukduran/gorevyonetim/releases) en yeni **v1.2.1-build.N** ön sürümü (önceki sürümler korunur):
 
 - **Windows:** `Gunluk-Gorevler-Windows-Kurulum.exe` (kurulum, Türkçe) ya da `Gunluk-Gorevler-Windows-portable.zip` (açıp `gunluk_gorevler.exe`). SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır. Veri: `%APPDATA%\GunlukGorevler`.
 - **macOS:** `Gunluk-Gorevler-macOS.dmg` (uygulamayı Applications'a sürükle). İmzasız: ilk açılışta sağ tık → Aç → Aç; olmazsa Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç. Veri: uygulamanın kendi kapsayıcısında (`~/Library/Containers/com.gunlukgorevler.gunlukGorevler`).
@@ -37,7 +37,7 @@ Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+
 
 - **Android (önizleme):** `Gunluk-Gorevler-Android-onizleme.apk`. Görevler uygulamanın özel veri klasöründe tutulur, depolama izni istenmez. Yedek almak/yüklemek sistemin dosya seçicisini açar. Uygulamayı kaldırmak görevleri siler; önce yedek al. APK test anahtarıyla imzalıdır; her derlemede anahtar değişebileceğinden güncellemeden önce yedek alıp kaldırmak gerekebilir. Kalıcı dağıtım imzası henüz yapılandırılmadı. Hatırlatmalar yalnız uygulama açıkken çalışır.
 
-Her sürüm GitHub'ın makinelerinde derlenir (`.github/workflows/release.yml`); ortak testler dört işte de koşar; masaüstü uygulamaları açılış kontrolünden, Android cihaz içi kayıt ve yeniden açılış testleri emülatörden geçer. Yalnız main dalında dört platform da başarılıysa aynı commit için yeni, numaralı ön sürüm yayımlanır; mevcut sürümler silinmez. Masaüstü dosyaları kod imzası içermez, Android APK test imzalıdır. Yerel Android dosya seçicisi gerçek cihazda elle kontrol bekliyor.
+Her sürüm GitHub'ın makinelerinde derlenir (`.github/workflows/release.yml`); ortak testler dört işte de koşar; masaüstü uygulamaları açılış kontrolünden, Android cihaz içi kayıt ve yeniden açılış testleri emülatörden geçer. Yalnız main dalında dört platform da başarılıysa aynı commit için yeni, numaralı ön sürüm yayımlanır; mevcut sürümler silinmez. Masaüstü dosyaları kod imzası içermez, Android APK test imzalıdır. Android 35 emülatöründe gerçek sistem seçicisiyle yedek yazma/yeniden seçme, Türkçe içerik, not/saat/adım/tik korunması, iptal ve bozuk JSON/UTF-8 reddi de CI kapsamında doğrulanır. Fiziksel telefon kabulü henüz yapılmadı.
 
 ## Geliştirme
 
@@ -45,6 +45,8 @@ Her sürüm GitHub'ın makinelerinde derlenir (`.github/workflows/release.yml`);
 export PATH=/opt/toolchains/flutter/bin:$PATH   # Flutter 3.47.6 / Dart 3.13.5
 flutter pub get && dart format --set-exit-if-changed . && flutter analyze && flutter test
 xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux   # gerçek dosya, yeniden açılış
+bash tool/android_picker_smoke.sh /tmp/android-picker   # çalışan Android emülatöründe gerçek sistem seçicisi
+python3 -m unittest discover -s tool -p 'test_*.py'    # ADB sürücüsünün güvenli hedef seçimi
 flutter build linux --release                         # Windows exe yalnızca Windows'ta derlenir
 xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke   # fare/klavye ile duman testi
 ```

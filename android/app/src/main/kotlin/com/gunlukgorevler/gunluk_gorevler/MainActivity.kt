@@ -2,6 +2,8 @@ package com.gunlukgorevler.gunluk_gorevler
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -32,6 +34,7 @@ class MainActivity : FlutterActivity() {
                                         addCategory(Intent.CATEGORY_OPENABLE)
                                         type = "application/json"
                                         putExtra(Intent.EXTRA_TITLE, exportName)
+                                        suggestDownloads(this)
                                     }
                                     startActivityForResult(intent, EXPORT)
                                 } else {
@@ -39,6 +42,7 @@ class MainActivity : FlutterActivity() {
                                         addCategory(Intent.CATEGORY_OPENABLE)
                                         type = "*/*"
                                         putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "text/plain", "application/octet-stream"))
+                                        suggestDownloads(this)
                                     }
                                     startActivityForResult(intent, IMPORT)
                                 }
@@ -100,6 +104,15 @@ class MainActivity : FlutterActivity() {
         if (result != null) send(result)
         exportText = null
         exportName = null
+    }
+
+    // A starting location only: people can still choose any document provider.
+    // SAF grants access to the selected document without storage permission.
+    private fun suggestDownloads(intent: Intent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,
+                DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Download"))
+        }
     }
 
     companion object {

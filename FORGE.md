@@ -1,12 +1,20 @@
 # Günlük Görevler geliştirme kontrol noktası
 
-Son çalışma: 9 Kasım 2026, 1.2.0 özelleştirme ve oyunlaştırma turu. Tek hedef depo: `kaansavukduran/gorevyonetim`. Başka depoları değiştirme.
+Son çalışma: 9 Kasım 2026, 1.2.1 Android yedekleme güvenilirliği turu. Tek hedef depo: `kaansavukduran/gorevyonetim`. Başka depoları değiştirme.
 
 ## Çalışma durumu
 
 9 Kasım 2026 14.38 Europe/Istanbul: Android sistem dosya seçicisi uçtan uca kabulü ve özel veri arayüzü üzerinde canlı çalışma var. Kilit 9 Kasım 2026 16.00 Europe/Istanbul’a kadar geçerli; diğer turlar kaynak kodunu değiştirmeden sonraki tura bırakmalı. Çalışma tamamlanınca kilit kaldırılır.
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
+
+## 1.2.1 Android yedekleme turu
+
+- [x] Depolama yeteneklerine göre arayüz: Android'de erişilemeyen iç dosya yolu/klasör düğmesi yerine özel alan ve kaldırmadan önce yedek alma açıklaması. Masaüstünde klasör açma korunur; tarayıcı önizlemesinde belleğin geçici olduğu doğru anlatılır.
+- [x] Android seçicisi İndirilenler'den başlar; başka konum seçilebilir, depolama izni istenmez. Boş seçici iptali yanıltıcı yedek bulunamadı diyaloğu açmaz. İçe aktarma sonrası korunan eski liste için Android'de teknik yol yerine açıklama gösterilir.
+- [x] Telefon düzeni, iptal, özel alan ve kaydedilmiş dosyayı koruma regresyonları; iki arayüz mutasyonu yakalandı ve geri alındı. Üç standart Python testi ADB sürücüsünün yalnız gözlenen DocumentsUI denetimlerine dokunduğunu denetler.
+- [ ] Yeni entegrasyon testi ve standart kitaplıklı ADB sürücüsü GitHub Android 35 emülatöründe gerçek sistem seçicisini açacak: dışa aktar, yeniden seç, Türkçe not/saat/adım/tik turu; iki işlemde iptal; bozuk JSON/UTF-8 reddi. Henüz başarılı cihaz sonucu olarak işaretlenmedi. XML/ekran/log kanıtları Actions artefaktına alınır.
+- [ ] 1.2.1 dört platform derlemesi ve yayın doğrulaması bekliyor.
 
 ## Yeni kullanıcı isteği: 1.2.0 turu
 
@@ -51,7 +59,7 @@ Android önizleme APK arşivi ayrıca indirildi: manifest ve ARM64, ARMv7, x86_6
 
 ## Yayın kuralları
 
-Dört platform işi de başarılı olmadan yayın yok. Ana dalda her başarılı derleme yeni `v1.2.0-build.N` ön sürümü üretir; eski `son-surum` dahil önceki indirmeler silinmez. Kaynak commit ve APK'nın test imzası sürüm notunda açık kalır. Üç masaüstü platformunda kod imzası yok. İmza yapılandırılmadan Android sürümünü mağaza/kararlı imzalı dağıtım diye adlandırma.
+Dört platform işi de başarılı olmadan yayın yok. Ana dalda her başarılı derleme yeni `v1.2.1-build.N` ön sürümü üretir; eski `son-surum` dahil önceki indirmeler silinmez. Kaynak commit ve APK'nın test imzası sürüm notunda açık kalır. Üç masaüstü platformunda kod imzası yok. İmza yapılandırılmadan Android sürümünü mağaza/kararlı imzalı dağıtım diye adlandırma.
 
 Linux integration işi yalnız `file_roundtrip_test.dart` çalıştırmalı; Android yerel kanal testi yalnız emülatörde koşar. İlk Linux CI turunda görev/tik yeniden açılış testi geçti, tümü atlanan Android test uygulamasının Linux debug bağlantısı kurulamadı. İş akışında hedef dosya daraltıldı.
 

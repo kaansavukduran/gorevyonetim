@@ -18,6 +18,11 @@ class Clock {
   DateTime now = DateTime(2026, 11, 7, 10); // Saturday
 }
 
+class FolderStore extends MemoryTaskStore {
+  @override
+  bool get canRevealLocation => true;
+}
+
 class Harness {
   Harness(this.controller, this.store, this.clock);
   final TaskController controller;
@@ -598,7 +603,7 @@ void main() {
   testWidgets('the info window says when the folder cannot be opened', (
     tester,
   ) async {
-    await pumpApp(tester);
+    await pumpApp(tester, store: FolderStore());
     await tester.tap(find.text('Ayarlar'));
     await tester.pumpAndSettle();
     await tester.dragUntilVisible(

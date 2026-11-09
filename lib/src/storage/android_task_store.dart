@@ -14,6 +14,12 @@ class AndroidTaskStore extends FileTaskStore {
   TaskData? _picked;
 
   @override
+  bool get canRevealLocation => false;
+
+  @override
+  bool get usesSystemFilePicker => true;
+
+  @override
   Future<String?> exportBackup(TaskData data, {required DateTime now}) =>
       channel.invokeMethod<String>('exportBackup', {
         'name': 'gunluk-gorevler-yedek-${LocalDate.of(now).toIso()}.json',

@@ -4,7 +4,7 @@
 ; outside the install folder, so uninstalling does not delete any task.
 #define AppName "Günlük Görevler"
 #ifndef AppVersion
-  #define AppVersion "1.2.0"
+  #define AppVersion "1.2.1"
 #endif
 
 [Setup]

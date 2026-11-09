@@ -68,6 +68,12 @@ class MemoryTaskStore implements TaskStore {
   bool get persistent => false;
 
   @override
+  bool get canRevealLocation => false;
+
+  @override
+  bool get usesSystemFilePicker => false;
+
+  @override
   Future<LoadResult> load() async {
     final text = saved;
     if (text == null) return const LoadMissing();

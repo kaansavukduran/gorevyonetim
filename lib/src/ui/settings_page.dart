@@ -117,10 +117,10 @@ class SettingsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Görevlerini bir dosyaya kaydet (masaüstünde İndirilenler, Android’de seçtiğin konum) ya da '
-                      'daha önce kaydettiğin bir yedeği geri yükle. Başka bir '
-                      'cihaza taşımak için de kullanılır.',
+                    Text(
+                      store.usesSystemFilePicker
+                          ? 'Yedeğini dosya seçicisinden belirlediğin konuma kaydet veya daha önce aldığın bir yedeği aç. Başka bir cihaza taşımak için de kullanabilirsin.'
+                          : 'Görevlerini İndirilenler klasörüne kaydet ya da daha önce aldığın bir yedeği geri yükle. Başka bir cihaza taşımak için de kullanabilirsin.',
                     ),
                     const SizedBox(height: 12),
                     Wrap(
@@ -154,31 +154,37 @@ class SettingsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Görevlerin yalnızca bu cihazda, tek bir dosyada durur; '
-                      'internete hiçbir şey gönderilmez. Her gün otomatik yedek '
-                      'alınır (son 14 gün).',
+                    Text(
+                      store.persistent
+                          ? 'Görevlerin yalnızca bu cihazda saklanır; uygulama bir sunucuya veri göndermez. Her gün otomatik yedek alınır (son 14 gün).'
+                          : 'Bu tarayıcı önizlemesindeki görevler sekmenin belleğinde durur; sekme kapatılınca kaybolur.',
                     ),
                     const SizedBox(height: 8),
-                    SelectableText(
-                      store.location,
-                      key: const Key('about-location'),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      key: const Key('about-open-folder'),
-                      icon: const Icon(Icons.folder_open, size: 18),
-                      label: const Text('Klasörü aç'),
-                      onPressed: () async {
-                        final ok = await store.revealLocation();
-                        if (!ok && context.mounted) {
-                          showUndoSnack(
-                            context,
-                            'Klasör açılamadı. Yukarıdaki yolu seçip kopyalayabilirsin.',
-                          );
-                        }
-                      },
-                    ),
+                    if (store.canRevealLocation) ...[
+                      SelectableText(
+                        store.location,
+                        key: const Key('about-location'),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        key: const Key('about-open-folder'),
+                        icon: const Icon(Icons.folder_open, size: 18),
+                        label: const Text('Klasörü aç'),
+                        onPressed: () async {
+                          final ok = await store.revealLocation();
+                          if (!ok && context.mounted) {
+                            showUndoSnack(
+                              context,
+                              'Klasör açılamadı. Yukarıdaki yolu seçip kopyalayabilirsin.',
+                            );
+                          }
+                        },
+                      ),
+                    ] else if (store.persistent)
+                      const Text(
+                        'Veriler uygulamanın özel alanında korunur. Dışarıda saklamak veya başka cihaza taşımak için Yedek bölümünü kullan. Uygulamayı kaldırmadan önce yedeğini dışa aktar.',
+                        key: Key('private-storage-help'),
+                      ),
                   ],
                 ),
               ),
@@ -232,6 +238,8 @@ class SettingsPage extends StatelessWidget {
       return;
     }
     if (!context.mounted) return;
+    // A cancelled native picker with no local backup is simply dismissed.
+    if (candidates.isEmpty && controller.store.usesSystemFilePicker) return;
     final chosen = await showDialog<BackupCandidate>(
       context: context,
       builder: (context) => AlertDialog(
@@ -299,7 +307,11 @@ class SettingsPage extends StatelessWidget {
       if (!context.mounted) return;
       showUndoSnack(
         context,
-        'Yedek yüklendi.${kept == null ? '' : ' Önceki liste: $kept'}',
+        'Yedek yüklendi.${kept == null
+            ? ''
+            : controller.store.canRevealLocation
+            ? ' Önceki liste: $kept'
+            : ' Önceki liste otomatik yedeklendi.'}',
         onUndo: () => controller.restore(before),
       );
     } on FormatException catch (e) {
