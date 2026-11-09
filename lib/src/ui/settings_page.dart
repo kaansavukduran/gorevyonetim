@@ -207,7 +207,7 @@ class SettingsPage extends StatelessWidget {
       showUndoSnack(
         context,
         path == null
-            ? 'Bu sürümde dosyaya yedek alınamıyor.'
+            ? 'Yedek kaydedilmedi veya işlem iptal edildi.'
             : 'Yedek kaydedildi: $path',
       );
     } catch (e) {

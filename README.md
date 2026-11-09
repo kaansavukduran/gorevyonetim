@@ -41,7 +41,7 @@ Her sürüm GitHub'ın makinelerinde derlenir (`.github/workflows/release.yml`);
 ```bash
 export PATH=/opt/toolchains/flutter/bin:$PATH   # Flutter 3.47.6 / Dart 3.13.5
 flutter pub get && dart format --set-exit-if-changed . && flutter analyze && flutter test
-xvfb-run -a flutter test integration_test -d linux   # gerçek dosya, yeniden açılış
+xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux   # gerçek dosya, yeniden açılış
 flutter build linux --release                         # Windows exe yalnızca Windows'ta derlenir
 xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke   # fare/klavye ile duman testi
 ```

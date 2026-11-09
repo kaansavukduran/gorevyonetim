@@ -29,6 +29,8 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 
 Dört platform işi de başarılı olmadan yayın yok. Ana dalda her başarılı derleme yeni `v1.1.0-build.N` ön sürümü üretir; eski `son-surum` dahil önceki indirmeler silinmez. Kaynak commit ve APK'nın test imzası sürüm notunda açık kalır. Üç masaüstü platformunda kod imzası yok. İmza yapılandırılmadan Android sürümünü mağaza/kararlı imzalı dağıtım diye adlandırma.
 
+Linux integration işi yalnız `file_roundtrip_test.dart` çalıştırmalı; Android yerel kanal testi yalnız emülatörde koşar. İlk Linux CI turunda görev/tik yeniden açılış testi geçti, tümü atlanan Android test uygulamasının Linux debug bağlantısı kurulamadı. İş akışında hedef dosya daraltıldı.
+
 ## Tam sonraki adım
 
 Gönderilen commit'in Actions işlerini izle. Hata varsa ilgili logdan düzelt, testleri tekrar çalıştır. Başarıda Releases varlıklarının beş masaüstü paketi + Android APK + SHA256SUMS içerdiğini ve aynı commit'e işaret ettiğini doğrula. Sonra Android sistem dosya seçicisi kabul turunu ve kalıcı APK imzasını ele al. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.

@@ -31,6 +31,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+          cache: true
       - name: Test on Windows
         shell: bash
         run: |
@@ -77,6 +78,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+          cache: true
       - name: Test on macOS
         run: |
           flutter pub get --enforce-lockfile
@@ -126,12 +128,13 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+          cache: true
       - name: Test on Linux
         run: |
           flutter pub get --enforce-lockfile
           flutter analyze
           flutter test
-          xvfb-run -a flutter test integration_test -d linux
+          xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux
       - name: Build
         run: flutter build linux --release --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ env.APP_VERSION }}+${{ github.run_number }}
       - name: Mouse and keyboard smoke (first start writes nothing, add, tick, restart)
@@ -165,6 +168,7 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+          cache: true
       - name: Test shared application code
         run: |
           flutter pub get --enforce-lockfile

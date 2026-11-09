@@ -9,7 +9,7 @@ Uygulama genel kalır: koda kimseye özel görev, isim, rutin ya da varsayılan 
 ```bash
 export PATH=/opt/toolchains/flutter/bin:$PATH   # Flutter 3.47.6 / Dart 3.13.5
 flutter pub get && dart format --set-exit-if-changed . && flutter analyze && flutter test
-xvfb-run -a flutter test integration_test -d linux      # gerçek dosya, yeniden açılış (libgtk-3-dev gerekir)
+xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux      # gerçek dosya, yeniden açılış (libgtk-3-dev gerekir)
 flutter build linux --release && xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke
 ```
 
