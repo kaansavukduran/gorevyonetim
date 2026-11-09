@@ -21,6 +21,7 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 - `flutter analyze`: temiz.
 - `flutter test`: 138 başarılı test; ölçek, gerçek ayar dosyasında hızlı yazımlar, Android kanalında yedek doğrulama ve dar ekran gezintisi dahil.
 - `flutter build web --release --no-web-resources-cdn`: başarılı (sadece geçici tarayıcı önizlemesi; web kalıcı veri desteği diye sunulmaz).
+- Chromium/Playwright ile %150 ölçeği seçme, görev ekleme, tik atma ve 390 pikselde Kontrol sekmesine geçiş doğrulandı; tarayıcı hata listesi boş.
 - Bu bulut makinesinde sudo/GTK derleyici araçları yok; yerel Linux masaüstü derlemesi yapılmadı. Gerçek platform derlemeleri GitHub'ın ilgili işletim sistemi makinelerinde ve Android emülatöründe koşacak.
 - Üç mutasyon denendi ve testler üçünü de yakaladı: karakter sınıfını kayıttan çıkarmak, büyütmeyi yok saymak, hızlı ayarları eşzamanlı yazmak. Değişiklikler geri alındı.
 - İlk GitHub Android işi SDK kurulum eyleminin artık bulunmayan `tools` paketini istemesi yüzünden durdu. Paket listesi yalnız `platform-tools` olacak şekilde düzeltildi; eski başarılı masaüstü sürümlerine dokunulmadı.
