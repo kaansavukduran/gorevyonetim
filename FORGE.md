@@ -16,6 +16,7 @@ Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliğ
 - [ ] Yeni entegrasyon testi ve standart kitaplıklı ADB sürücüsü GitHub Android 35 emülatöründe gerçek sistem seçicisini açacak: dışa aktar, yeniden seç, Türkçe not/saat/adım/tik turu; iki işlemde iptal; bozuk JSON/UTF-8 reddi. Henüz başarılı cihaz sonucu olarak işaretlenmedi. XML/ekran/log kanıtları Actions artefaktına alınır.
 - [ ] 1.2.1 dört platform derlemesi ve yayın doğrulaması bekliyor.
 - Derleme 13: Linux işi başarılı; Android test sürücüsü uygulama kurulmadan önce örnek JSON'u emülatörün paylaşılan alanına aktarırken durdu, seçici testi henüz çalışmadı. Yayın yok. Hazırlık uygulamanın gerçek başlangıç işaretinden sonraya alındı; sınırlı hazırlık beklemesi ve ADB stderr kaydı eklendi. Başarı iddiası yeni cihaz sonucu bekliyor.
+- Derleme 14: üç masaüstü işi ve önceki iki Android entegrasyonu başarılı. Gerçek seçiciyle ilk JSON dışa aktarımı geçti; iptal testinde sürücü yavaş UI dökümü sırasında değişen işlem işaretini yeniden kontrol etmediği için eski Kaydet eylemini tekrarladı. Yayın yok. Sürücüye güncel işlem kontrolü ve tek seferlik kaydet/seç eylemi eklendi; bu yarış için Python regresyonu yazıldı. İptal/bozuk dosya/içe aktarım kabulü hâlâ yeni sonuç bekliyor.
 
 ## Yeni kullanıcı isteği: 1.2.0 turu
 

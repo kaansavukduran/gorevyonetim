@@ -54,6 +54,16 @@ def picker_action(xml, step, name=None):
     return None
 
 
+def guarded_picker_action(xml, expected, latest, acted):
+    # UIAutomator may take seconds. Flutter can advance to the next native
+    # request while a dump is in flight, so never act on an old phase snapshot.
+    if any(expected.get(k) != latest.get(k) for k in ("runId", "requestId", "step")):
+        return None
+    if expected["requestId"] in acted and not expected["step"].endswith("-cancel"):
+        return None
+    return picker_action(xml, expected["step"], expected.get("fileName"))
+
+
 class Driver:
     def __init__(self, serial, out, run_id):
         self.serial, self.out, self.run_id = serial, out, run_id
@@ -87,6 +97,13 @@ class Driver:
         (self.out / f"{label}.xml").write_text(xml, encoding="utf-8")
         (self.out / f"{label}.png").write_bytes(self.adb("exec-out", "screencap", "-p", binary=True))
 
+    def marker(self):
+        raw = self.adb("shell", "run-as", APP, "cat", "files/picker-e2e-control.json", check=False)
+        try:
+            return json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
     def prepare_fixtures(self):
         # The app marker proves installation/startup finished. A newly booted
         # emulator can report boot_complete before shared storage is writable.
@@ -111,14 +128,10 @@ class Driver:
         self.adb("wait-for-device")
         deadline, last_request, phase_start = time.monotonic() + 900, None, None
         saved_evidence, last_tap = set(), 0
+        acted = set()
         exported, fixtures_ready = None, False
         while time.monotonic() < deadline:
-            raw = self.adb("shell", "run-as", APP, "cat", "files/picker-e2e-control.json", check=False)
-            try:
-                marker = json.loads(raw)
-            except (json.JSONDecodeError, TypeError):
-                time.sleep(1)
-                continue
+            marker = self.marker()
             if marker.get("runId") != self.run_id:
                 time.sleep(1)
                 continue
@@ -147,18 +160,22 @@ class Driver:
                 return
             xml = self.xml()
             if xml:
-                action = picker_action(xml, step, marker.get("fileName"))
+                action = guarded_picker_action(xml, marker, self.marker(), acted)
                 label = f"{request_id}-{step}"
                 if action and label not in saved_evidence:
                     self.evidence(label, xml)
                     saved_evidence.add(label)
                 if action and time.monotonic() - last_tap > 2:
+                    action = guarded_picker_action(xml, marker, self.marker(), acted)
+                    if action is None:
+                        continue
                     if step == "export":
                         exported = marker["fileName"]
                     if action == "back":
                         self.adb("shell", "input", "keyevent", "4")
                     else:
                         self.adb("shell", "input", "tap", str(action[0]), str(action[1]))
+                    acted.add(request_id)
                     last_tap = time.monotonic()
             if time.monotonic() - phase_start > 65:
                 if xml:

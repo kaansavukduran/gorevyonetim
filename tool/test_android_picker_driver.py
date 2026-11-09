@@ -1,6 +1,6 @@
 """Guard the UI driver's activity boundary and observed tap coordinates."""
 import unittest
-from android_picker_driver import center, picker_action
+from android_picker_driver import center, picker_action, guarded_picker_action
 
 
 def xml(package, text="SAVE", resource="android:id/button1", bounds="[10,20][110,80]", enabled="true"):
@@ -8,6 +8,19 @@ def xml(package, text="SAVE", resource="android:id/button1", bounds="[10,20][110
 
 
 class PickerDriverTest(unittest.TestCase):
+    def test_a_slow_dump_cannot_save_the_next_cancel_request(self):
+        tree = xml("com.android.documentsui")
+        old = {"runId": "run", "requestId": 1, "step": "export"}
+        new = {"runId": "run", "requestId": 2, "step": "export-cancel"}
+        self.assertIsNone(guarded_picker_action(tree, old, new, set()))
+        self.assertIsNone(guarded_picker_action(tree, old, old, {1}))
+        self.assertEqual(guarded_picker_action(tree, new, new, {1}), "back")
+        # A second Back may hide the keyboard, but cannot hit the next import.
+        self.assertEqual(guarded_picker_action(tree, new, new, {1, 2}), "back")
+        changed = {**new, "requestId": 3, "step": "import"}
+        self.assertIsNone(guarded_picker_action(tree, new, changed, {1, 2}))
+        self.assertIsNone(guarded_picker_action(tree, old, {**old, "runId": "other"}, set()))
+
     def test_only_real_picker_controls_are_tapped(self):
         for package in ("com.android.documentsui", "com.google.android.documentsui"):
             self.assertEqual(picker_action(xml(package), "export"), (60, 50))
