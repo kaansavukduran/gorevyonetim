@@ -9,7 +9,6 @@ import 'package:integration_test/integration_test.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  if (!Platform.isAndroid) return;
   testWidgets('Android native directory keeps tasks and settings on reopen', (
     tester,
   ) async {
@@ -36,5 +35,5 @@ void main() {
     expect(second.settings.charClass, 'buyucu');
     first.dispose();
     second.dispose();
-  });
+  }, skip: !Platform.isAndroid);
 }
