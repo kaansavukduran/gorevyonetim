@@ -17,6 +17,7 @@ Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliğ
 - [x] Gerçek görevlerden hesaplanan 1–20 arası günlük hedef ve hedef kutlaması. Hedef/tema ayarı değiştirmek XP vermez; azaltılmış hareket ve efekt kapatma tercihi korunur.
 - [x] Zenginleştirilmiş ürün promptu [FORGE_PROMPT.md](FORGE_PROMPT.md) içinde ve saatlik otomasyonda kayıtlı. Oyunlaştırma, hassas özelleştirme ve gerçek test/yayın şartları kalıcı talimattır.
 - [x] Yerel analiz temiz; 154 test başarılı. Altı mutasyon testlerce yakalandı (paleti kaydetmeme, sıralamayı yok sayma, saat düzenlerken notu silme, hedef için fazladan tik üretme, hassas ölçeği yok sayma, ayrı sistem hareket azaltma bayrağını yok sayma). Mutasyonlar geri alındı.
+- Derleme 10, son erişilebilirlik ekinde atlanan bir `curly_braces_in_flow_control_structures` biçim kuralı yüzünden durdu; yayınlanmadı. Düzeltme sonrası yerel analiz temiz ve yalnız `reduceMotion` açık regresyon testi başarılı; derleme 11 izleniyor.
 - [x] Sistem `reduceMotion` ve `disableAnimations` bayrakları ayrı ayrı ele alınır; yalnız `reduceMotion` açıkken de kutlama engellenir. Bu regresyon test ve mutasyonla doğrulandı.
 - [x] Chromium/Playwright: doğrudan %137, HEX ile `#10B981` uygulama ve 390 pikselde renk seçici açılışı doğrulandı; tarayıcı hatası yok.
 - [ ] 1.2.0 için dört platformun CI derlemesini ve numaralı Releases kaydını doğrula. Önceki 1.1.0 sürümünü yeni özellikler içeriyor diye sunma.
