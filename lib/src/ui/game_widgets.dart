@@ -514,8 +514,9 @@ void showConfetti(BuildContext context) {
           .instance
           .platformDispatcher
           .accessibilityFeatures
-          .reduceMotion)
+          .reduceMotion) {
     return;
+  }
   final overlay = Overlay.maybeOf(context);
   if (overlay == null) return;
   late OverlayEntry entry;
