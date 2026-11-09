@@ -193,7 +193,12 @@ T withGameFeedback<T>(
   if (!controller.settings.gameMode) return change();
   final animate =
       controller.settings.celebrationEffects &&
-      !MediaQuery.disableAnimationsOf(context);
+      !MediaQuery.disableAnimationsOf(context) &&
+      !WidgetsBinding
+          .instance
+          .platformDispatcher
+          .accessibilityFeatures
+          .reduceMotion;
   final before = controller.profile;
   int doneToday() => controller.data
       .tasksOn(controller.today)
@@ -504,7 +509,13 @@ class ActivityHeatmap extends StatelessWidget {
 
 /// A short burst of confetti over the screen (perfect day).
 void showConfetti(BuildContext context) {
-  if (MediaQuery.disableAnimationsOf(context)) return;
+  if (MediaQuery.disableAnimationsOf(context) ||
+      WidgetsBinding
+          .instance
+          .platformDispatcher
+          .accessibilityFeatures
+          .reduceMotion)
+    return;
   final overlay = Overlay.maybeOf(context);
   if (overlay == null) return;
   late OverlayEntry entry;
