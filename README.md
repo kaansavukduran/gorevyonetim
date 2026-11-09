@@ -29,7 +29,7 @@ Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+
 
 ## İndirme
 
-[Releases sayfasındaki](https://github.com/kaansavukduran/gorevyonetimuygulamas-/releases) en yeni **v1.2.0-build.N** ön sürümü (önceki sürümler korunur):
+[Releases sayfasındaki](https://github.com/kaansavukduran/gorevyonetim/releases) en yeni **v1.2.0-build.N** ön sürümü (önceki sürümler korunur):
 
 - **Windows:** `Gunluk-Gorevler-Windows-Kurulum.exe` (kurulum, Türkçe) ya da `Gunluk-Gorevler-Windows-portable.zip` (açıp `gunluk_gorevler.exe`). SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır. Veri: `%APPDATA%\GunlukGorevler`.
 - **macOS:** `Gunluk-Gorevler-macOS.dmg` (uygulamayı Applications'a sürükle). İmzasız: ilk açılışta sağ tık → Aç → Aç; olmazsa Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç. Veri: uygulamanın kendi kapsayıcısında (`~/Library/Containers/com.gunlukgorevler.gunlukGorevler`).
