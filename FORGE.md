@@ -2,6 +2,10 @@
 
 Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukduran/gorevyonetimuygulamas-`. Başka depoları değiştirme.
 
+## Aktif çalışma kilidi
+
+9 Kasım 2026 13.25 Europe/Istanbul: kullanıcının yeni isteği üzerinde canlı Codex çalışması sürüyor: Gün ekranında fareyle sıralama, kolay saat girişi, renk seçicili ayrıntılı tema. Kilit 9 Kasım 2026 14.30 Europe/Istanbul’a kadar geçerli. Bu süre içinde saatlik tur kaynak kodunu değiştirmeden sonraki tura bırakmalı; ana çalışma sonunda kilit kaldırılır.
+
 ## Kabul ölçütleri ve durum
 
 - [x] Herkese açık kullanım: boş ilk liste; kişiye özel görev, rutin veya veri yok.
