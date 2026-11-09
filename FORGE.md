@@ -6,7 +6,19 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 
 9 Kasım 2026 13.25 Europe/Istanbul: kullanıcının yeni isteği üzerinde canlı Codex çalışması sürüyor: Gün ekranında fareyle sıralama, kolay saat girişi, renk seçicili ayrıntılı tema. Kilit 9 Kasım 2026 14.30 Europe/Istanbul’a kadar geçerli. Bu süre içinde saatlik tur kaynak kodunu değiştirmeden sonraki tura bırakmalı; ana çalışma sonunda kilit kaldırılır.
 
-## Kabul ölçütleri ve durum
+## Yeni kullanıcı isteği: 1.2.0 turu
+
+- [x] Gün ekranında fareyle yukarı/aşağı sıralama; görünmeyen görevlerin yuvaları ve bütün tikler korunur. Saat sırasından sürükleme manuel sıraya geçirir; seçim ve sıra kaydedilir.
+- [x] Hızlı eklemede ve görev kartında saat; 24 saat biçiminde klavye girişi, değiştirme/kaldırma/iptal. Notlar, adımlar, zorluk ve geçmiş korunur.
+- [x] %1 hassasiyetli ölçek çubuğu, doğrudan yüzde, anlık örnek ve sıfırlama. Tüm pencere ölçeği çubuk bırakılınca uygulanır; böylece denetim fare altında yer değiştirmez.
+- [x] Altı bağımsız tema rengi; renk alanı, ton/RGB çubukları, HEX, palet, önceki/yeni örnek ve iptal. Açık/koyu görünüm, 0–28 px hassas kart köşesi, başlık stili ve rozet parlaması kalıcıdır.
+- [x] Gerçek görevlerden hesaplanan 1–20 arası günlük hedef ve hedef kutlaması. Hedef/tema ayarı değiştirmek XP vermez; azaltılmış hareket ve efekt kapatma tercihi korunur.
+- [x] Zenginleştirilmiş ürün promptu [FORGE_PROMPT.md](FORGE_PROMPT.md) içinde ve saatlik otomasyonda kayıtlı. Oyunlaştırma, hassas özelleştirme ve gerçek test/yayın şartları kalıcı talimattır.
+- [x] Yerel analiz temiz; 154 test başarılı. Beş mutasyon testlerce yakalandı (paleti kaydetmeme, sıralamayı yok sayma, saat düzenlerken notu silme, hedef için fazladan tik üretme, hassas ölçeği yok sayma). Mutasyonlar geri alındı.
+- [x] Chromium/Playwright: doğrudan %137, HEX ile `#10B981` uygulama ve 390 pikselde renk seçici açılışı doğrulandı; tarayıcı hatası yok.
+- [ ] 1.2.0 için dört platformun CI derlemesini ve numaralı Releases kaydını doğrula. Önceki 1.1.0 sürümünü yeni özellikler içeriyor diye sunma.
+
+## Önceki turun kabul ölçütleri ve durum
 
 - [x] Herkese açık kullanım: boş ilk liste; kişiye özel görev, rutin veya veri yok.
 - [x] Günlük/haftalık/tek seferlik görev, gün gün tik, düzenleme/sonlandırma/silme ve geçmiş davranışı mevcut testlerle korunuyor.
@@ -34,12 +46,12 @@ Android önizleme APK arşivi ayrıca indirildi: manifest ve ARM64, ARMv7, x86_6
 
 ## Yayın kuralları
 
-Dört platform işi de başarılı olmadan yayın yok. Ana dalda her başarılı derleme yeni `v1.1.0-build.N` ön sürümü üretir; eski `son-surum` dahil önceki indirmeler silinmez. Kaynak commit ve APK'nın test imzası sürüm notunda açık kalır. Üç masaüstü platformunda kod imzası yok. İmza yapılandırılmadan Android sürümünü mağaza/kararlı imzalı dağıtım diye adlandırma.
+Dört platform işi de başarılı olmadan yayın yok. Ana dalda her başarılı derleme yeni `v1.2.0-build.N` ön sürümü üretir; eski `son-surum` dahil önceki indirmeler silinmez. Kaynak commit ve APK'nın test imzası sürüm notunda açık kalır. Üç masaüstü platformunda kod imzası yok. İmza yapılandırılmadan Android sürümünü mağaza/kararlı imzalı dağıtım diye adlandırma.
 
 Linux integration işi yalnız `file_roundtrip_test.dart` çalıştırmalı; Android yerel kanal testi yalnız emülatörde koşar. İlk Linux CI turunda görev/tik yeniden açılış testi geçti, tümü atlanan Android test uygulamasının Linux debug bağlantısı kurulamadı. İş akışında hedef dosya daraltıldı.
 
 ## Tam sonraki adım
 
-Yayın ve dört platformun derlemesi tamamlandı. Şimdi Android sistem dosya seçicisini gerçek emülatör UI akışıyla doğrula (JSON oluşturma, geri seçme, Türkçe içerik, iptal, bozuk yedeği reddetme). Gizli Android dosya yolunu/masaüstü klasör düğmesini telefon arayüzünden sadeleştir. Kalıcı APK imzası için yukarıdaki gerçek secrets izin engelini koru; imza sorununu çözülmüş sayma. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.
+Önce 1.2.0 turunun dört platform CI sonucunu ve Releases varlıklarını doğrula. Sonra Android sistem dosya seçicisini gerçek emülatör UI akışıyla doğrula (JSON oluşturma, geri seçme, Türkçe içerik, iptal, bozuk yedeği reddetme). Gizli Android dosya yolunu/masaüstü klasör düğmesini telefon arayüzünden sadeleştir. Kalıcı APK imzası için yukarıdaki gerçek secrets izin engelini koru; imza sorununu çözülmüş sayma. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.
 
 Tamamlanma: yukarıdaki açık kabul maddeleri gerçek kanıtla kapanınca saatlik otomasyonu durdur. Somut kullanıcı ayarı gerektiren engeli açıkça kaydet; tamamlandı sayma.

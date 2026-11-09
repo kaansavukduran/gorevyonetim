@@ -723,6 +723,12 @@ void main() {
       expect(find.text('Karakter'), findsOneWidget);
       await tester.tap(find.text('Ayarlar'));
       await tester.pumpAndSettle();
+      await tester.dragUntilVisible(
+        find.byKey(const Key('game-mode')),
+        find.byKey(const Key('settings-list')),
+        const Offset(0, -300),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('game-mode')));
       await tester.pumpAndSettle();
       expect(find.text('Karakter'), findsNothing);

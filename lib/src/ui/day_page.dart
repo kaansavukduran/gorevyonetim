@@ -11,6 +11,7 @@ import 'status_style.dart';
 import 'task_actions.dart';
 import 'task_editor.dart';
 import 'themes.dart';
+import 'task_time_picker.dart';
 
 /// One day's list: the week at the top, a field to add, the tasks to tick.
 class DayPage extends StatelessWidget {
@@ -32,18 +33,25 @@ class DayPage extends StatelessWidget {
     final data = controller.data;
     final today = controller.today;
     final tasks = data.tasksOn(day);
-    // Tasks with a time come first, in time order; the rest keep their order.
-    final open =
-        [
-          for (final t in tasks)
-            if (!data.isDone(t.id, day)) t,
-        ]..sort((a, b) {
-          final ta = a.time, tb = b.time;
-          if (ta != null && tb != null) return ta.compareTo(tb);
-          if (ta != null) return -1;
-          if (tb != null) return 1;
-          return a.order.compareTo(b.order);
-        });
+    // Manual order is shared with Görevler; chronological sorting is optional.
+    final open = [
+      for (final t in tasks)
+        if (!data.isDone(t.id, day)) t,
+    ];
+    if (controller.settings.sortByTime) {
+      open.sort((a, b) {
+        final ta = a.time, tb = b.time;
+        if (ta != null && tb != null) {
+          final result = ta.compareTo(tb);
+          if (result != 0) return result;
+        } else if (ta != null) {
+          return -1;
+        } else if (tb != null) {
+          return 1;
+        }
+        return a.order.compareTo(b.order);
+      });
+    }
     final done = [
       for (final t in tasks)
         if (data.isDone(t.id, day)) t,
@@ -85,6 +93,13 @@ class DayPage extends StatelessWidget {
                     total: tasks.length,
                     done: done.length,
                   ),
+                  if (controller.settings.gameMode && day == today) ...[
+                    const SizedBox(height: 12),
+                    DailyGoalProgress(
+                      done: done.length,
+                      goal: controller.settings.dailyGoal.clamp(1, 20),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -93,6 +108,39 @@ class DayPage extends StatelessWidget {
                 hasScrollBody: false,
                 child: _EmptyDay(isPast: day.isBefore(today)),
               ),
+            if (tasks.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ChoiceChip(
+                        key: const Key('sort-manual'),
+                        label: const Text('Kendi sıram'),
+                        selected: !controller.settings.sortByTime,
+                        onSelected: (_) => controller.updateSettings(
+                          controller.settings.copyWith(sortByTime: false),
+                        ),
+                      ),
+                      ChoiceChip(
+                        key: const Key('sort-time'),
+                        label: const Text('Saate göre'),
+                        selected: controller.settings.sortByTime,
+                        onSelected: (_) => controller.updateSettings(
+                          controller.settings.copyWith(sortByTime: true),
+                        ),
+                      ),
+                      const Tooltip(
+                        message: 'Görevleri soldaki tutamaçtan yukarı veya aşağı sürükleyebilirsin.',
+                        child: Icon(Icons.drag_indicator, size: 20),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (open.isNotEmpty) ...[
               _sectionHeader(
                 context,
@@ -100,18 +148,43 @@ class DayPage extends StatelessWidget {
                     ? 'Yapılmayanlar (${open.length})'
                     : 'Yapılacaklar (${open.length})',
               ),
-              SliverList.builder(
+              SliverReorderableList(
+                key: const Key('day-open-list'),
                 itemCount: open.length,
-                itemBuilder: (_, i) =>
-                    TaskTile(controller: controller, task: open[i], day: day),
+                onReorderItem: (a, b) {
+                  controller.reorderVisible([for (final t in open) t.id], a, b);
+                  if (controller.settings.sortByTime) {
+                    controller.updateSettings(
+                      controller.settings.copyWith(sortByTime: false),
+                    );
+                  }
+                },
+                itemBuilder: (_, i) => TaskTile(
+                  key: ValueKey('open-${open[i].id}'),
+                  controller: controller,
+                  task: open[i],
+                  day: day,
+                  dragIndex: i,
+                ),
               ),
             ],
             if (done.isNotEmpty) ...[
               _sectionHeader(context, 'Tamamlananlar (${done.length})'),
-              SliverList.builder(
+              SliverReorderableList(
+                key: const Key('day-done-list'),
                 itemCount: done.length,
-                itemBuilder: (_, i) =>
-                    TaskTile(controller: controller, task: done[i], day: day),
+                onReorderItem: (a, b) => controller.reorderVisible(
+                  [for (final t in done) t.id],
+                  a,
+                  b,
+                ),
+                itemBuilder: (_, i) => TaskTile(
+                  key: ValueKey('done-${done[i].id}'),
+                  controller: controller,
+                  task: done[i],
+                  day: day,
+                  dragIndex: i,
+                ),
               ),
             ],
             const SliverToBoxAdapter(child: SizedBox(height: 48)),
@@ -445,6 +518,7 @@ class _QuickAddState extends State<_QuickAdd> {
   final _text = TextEditingController();
   final _focus = FocusNode();
   _QuickRepeat _repeat = _QuickRepeat.daily;
+  ClockTime? _time;
 
   @override
   void dispose() {
@@ -468,7 +542,13 @@ class _QuickAddState extends State<_QuickAdd> {
   void _add() {
     final title = _text.text.trim();
     if (title.isEmpty) return;
-    widget.controller.addTask(title: title, rule: _rule, start: widget.day);
+    widget.controller.addTask(
+      title: title,
+      rule: _rule,
+      start: widget.day,
+      time: _time,
+    );
+    setState(() => _time = null);
     _text.clear();
     _focus.requestFocus();
   }
@@ -480,6 +560,7 @@ class _QuickAddState extends State<_QuickAdd> {
       start: widget.day,
       initialTitle: _text.text.trim(),
       initialRule: _rule,
+      initialTime: _time,
     );
     _text.clear();
   }
@@ -496,6 +577,7 @@ class _QuickAddState extends State<_QuickAdd> {
       onSubmitted: (_) => _add(),
       decoration: InputDecoration(
         hintText: 'Görev ekle ve Enter\'a bas',
+        helperText: _time == null ? null : 'Görev saati: ${_time!.format()}',
         filled: true,
         fillColor: scheme.surfaceContainerLow,
         prefixIcon: const Icon(Icons.add_rounded),
@@ -512,6 +594,29 @@ class _QuickAddState extends State<_QuickAdd> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              IconButton(
+                key: const Key('quick-time'),
+                tooltip: _time == null
+                    ? 'Göreve saat ekle'
+                    : 'Görev saati: ${_time!.format()}',
+                icon: Icon(
+                  _time == null ? Icons.schedule_outlined : Icons.schedule,
+                  color: _time == null
+                      ? scheme.onSurfaceVariant
+                      : scheme.primary,
+                ),
+                onPressed: () async {
+                  final value = await pickTaskTime(context, initial: _time);
+                  if (value != null && mounted) setState(() => _time = value);
+                },
+              ),
+              if (_time != null)
+                IconButton(
+                  key: const Key('quick-time-clear'),
+                  tooltip: 'Görev saatini kaldır',
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => setState(() => _time = null),
+                ),
               PopupMenuButton<Object>(
                 key: const Key('quick-repeat'),
                 tooltip: 'Ne sıklıkla?',
@@ -627,8 +732,10 @@ class TaskTile extends StatefulWidget {
     required this.controller,
     required this.task,
     required this.day,
+    this.dragIndex,
   });
 
+  final int? dragIndex;
   final TaskController controller;
   final Task task;
   final LocalDate day;
@@ -722,13 +829,31 @@ class _TaskTileState extends State<TaskTile> {
 
     final compact = MediaQuery.sizeOf(context).width < 700;
     final details = <Widget>[
-      if (task.time != null)
-        chip(
-          late ? '${task.time!.format()} geçti' : task.time!.format(),
-          key: Key('task-time-${task.id}'),
-          icon: Icons.schedule,
+      InputChip(
+        key: Key('task-time-${task.id}'),
+        avatar: Icon(
+          Icons.schedule,
+          size: 16,
           color: late ? scheme.error : scheme.onSurfaceVariant,
         ),
+        label: Text(
+          task.time == null
+              ? 'Saat ekle'
+              : late
+              ? '${task.time!.format()} geçti'
+              : task.time!.format(),
+          style: TextStyle(color: late ? scheme.error : null),
+        ),
+        visualDensity: VisualDensity.compact,
+        onPressed: () async {
+          final value = await pickTaskTime(context, initial: task.time);
+          if (value != null && mounted) controller.setTaskTime(task.id, value);
+        },
+        onDeleted: task.time == null
+            ? null
+            : () => controller.setTaskTime(task.id, null),
+        deleteButtonTooltipMessage: 'Saati kaldır',
+      ),
       if (task.steps.isNotEmpty)
         Padding(
           padding: const EdgeInsets.only(left: 6),
@@ -769,7 +894,7 @@ class _TaskTileState extends State<TaskTile> {
             ? scheme.surfaceContainerLow.withValues(alpha: 0.85)
             : scheme.surface.withValues(alpha: 0.92),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(style.radius),
           side: BorderSide(
             color: late
                 ? scheme.error.withValues(alpha: 0.7)
@@ -777,7 +902,7 @@ class _TaskTileState extends State<TaskTile> {
           ),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(style.radius),
           onTap: future ? null : _toggle,
           onSecondaryTapUp: (d) =>
               showTaskMenuAt(context, controller, task, d.globalPosition),
@@ -787,6 +912,22 @@ class _TaskTileState extends State<TaskTile> {
               children: [
                 Row(
                   children: [
+                    if (widget.dragIndex != null)
+                      ReorderableDragStartListener(
+                        index: widget.dragIndex!,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.grab,
+                          child: Tooltip(
+                            message: 'Sürükleyerek sırala',
+                            child: SizedBox(
+                              key: Key('task-drag-${task.id}'),
+                              width: 32,
+                              height: 48,
+                              child: const Icon(Icons.drag_indicator, size: 20),
+                            ),
+                          ),
+                        ),
+                      ),
                     Tooltip(
                       message: future
                           ? 'İleri bir gün işaretlenemez'

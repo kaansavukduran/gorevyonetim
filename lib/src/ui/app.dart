@@ -20,7 +20,10 @@ class GunlukGorevlerApp extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
-      final spec = themeById(controller.settings.themeId);
+      final spec = customizedTheme(
+        themeById(controller.settings.themeId),
+        controller.settings.customTheme,
+      );
       return MaterialApp(
         title: 'Günlük Görevler',
         debugShowCheckedModeBanner: false,
@@ -29,6 +32,7 @@ class GunlukGorevlerApp extends StatelessWidget {
         supportedLocales: const [Locale('tr', 'TR')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         builder: (context, child) => DecoratedBox(
+          key: const Key('app-background'),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,

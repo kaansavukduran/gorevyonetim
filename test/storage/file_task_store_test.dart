@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gunluk_gorevler/src/app/settings.dart';
+import 'package:gunluk_gorevler/src/app/theme_customization.dart';
 import 'package:gunluk_gorevler/src/domain/local_date.dart';
 import 'package:gunluk_gorevler/src/domain/repeat_rule.dart';
 import 'package:gunluk_gorevler/src/domain/task.dart';
@@ -240,11 +241,27 @@ void main() {
 
     expect((await store.loadSettings()).themeId, 'diyar');
     await store.saveSettings(
-      const AppSettings(themeId: 'orman', gameMode: false),
+      const AppSettings(
+        themeId: 'orman',
+        gameMode: false,
+        uiScale: 1.37,
+        sortByTime: true,
+        dailyGoal: 7,
+        customTheme: ThemeCustomization(
+          enabled: true,
+          primary: 0x3366FF,
+          radius: 23,
+        ),
+      ),
     );
     final back = await store.loadSettings();
     expect(back.themeId, 'orman');
     expect(back.gameMode, isFalse);
+    expect(back.uiScale, 1.37);
+    expect(back.sortByTime, isTrue);
+    expect(back.dailyGoal, 7);
+    expect(back.customTheme.primary, 0x3366FF);
+    expect(back.customTheme.radius, 23);
 
     final now = DateTime(2026, 11, 7, 10, 5, 3);
     final path = await store.exportBackup(sample('Yedek'), now: now);

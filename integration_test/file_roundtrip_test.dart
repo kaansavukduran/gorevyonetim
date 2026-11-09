@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gunluk_gorevler/src/app/task_controller.dart';
+import 'package:gunluk_gorevler/src/app/settings.dart';
+import 'package:gunluk_gorevler/src/app/theme_customization.dart';
 import 'package:gunluk_gorevler/src/domain/local_date.dart';
 import 'package:gunluk_gorevler/src/storage/file_task_store.dart';
 import 'package:gunluk_gorevler/src/ui/app.dart';
@@ -49,7 +51,24 @@ void main() {
     expect(await file.exists(), isTrue);
     expect(await file.readAsString(), contains('Çiçekleri sula'));
 
+    await first.updateSettings(
+      const AppSettings(
+        uiScale: 1.37,
+        sortByTime: true,
+        dailyGoal: 5,
+        customTheme: ThemeCustomization(
+          enabled: true,
+          primary: 0x10B981,
+          radius: 23,
+        ),
+      ),
+    );
     final second = await start();
+    expect(second.settings.uiScale, 1.37);
+    expect(second.settings.sortByTime, isTrue);
+    expect(second.settings.dailyGoal, 5);
+    expect(second.settings.customTheme.primary, 0x10B981);
+    expect(second.settings.customTheme.radius, 23);
     expect(second.data.tasks.single.title, 'Çiçekleri sula');
     expect(second.data.isDone(id, LocalDate.of(DateTime.now())), isTrue);
     expect(find.text('Bugünün hepsi tamam: 1 / 1'), findsOneWidget);

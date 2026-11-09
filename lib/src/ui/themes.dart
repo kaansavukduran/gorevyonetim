@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app/theme_customization.dart';
+
 /// Extra look of a theme beyond Material colours: the background gradient,
 /// the XP colour, card borders and the emblem on the character card.
 class GameStyle extends ThemeExtension<GameStyle> {
@@ -10,6 +12,7 @@ class GameStyle extends ThemeExtension<GameStyle> {
     required this.emblem,
     required this.glow,
     this.headlineFamily,
+    this.radius = 14,
   });
 
   final List<Color> gradient;
@@ -19,6 +22,7 @@ class GameStyle extends ThemeExtension<GameStyle> {
 
   /// Soft coloured shadow around cards (game-like themes).
   final bool glow;
+  final double radius;
 
   /// Font family for titles (falls back to the system font if missing).
   final String? headlineFamily;
@@ -152,6 +156,46 @@ AppThemeSpec themeById(String id) => appThemes.firstWhere(
   orElse: () => appThemes.firstWhere((t) => t.id == defaultThemeId),
 );
 
+AppThemeSpec customizedTheme(AppThemeSpec base, ThemeCustomization custom) {
+  if (!custom.enabled) return base;
+  final brightness = switch (custom.appearance) {
+    'light' => Brightness.light,
+    'dark' => Brightness.dark,
+    _ => base.brightness,
+  };
+  final palette = brightness == base.brightness
+      ? base
+      : themeById(brightness == Brightness.dark ? 'gece' : 'sade');
+  Color color(int? rgb, Color fallback) =>
+      rgb == null ? fallback : Color(0xFF000000 | rgb);
+  return AppThemeSpec(
+    id: base.id,
+    name: base.name,
+    tagline: base.tagline,
+    brightness: brightness,
+    primary: color(custom.primary, base.primary),
+    secondary: color(custom.secondary, base.secondary),
+    surface: color(custom.surface, palette.surface),
+    gradient: [
+      color(custom.backgroundStart, palette.gradient.first),
+      color(custom.backgroundEnd, palette.gradient.last),
+    ],
+    xp: color(custom.xp, base.xp),
+    emblem: base.emblem,
+    glow: custom.glow ?? base.glow,
+    serifTitles: custom.serifTitles ?? base.serifTitles,
+    radius: custom.safeRadius ?? base.radius,
+  );
+}
+
+/// Choose the more readable foreground, including on arbitrary custom colours.
+Color contrastingText(Color background) {
+  final luminance = background.computeLuminance();
+  final blackContrast = (luminance + 0.05) / 0.05;
+  final whiteContrast = 1.05 / (luminance + 0.05);
+  return blackContrast >= whiteContrast ? Colors.black : Colors.white;
+}
+
 ThemeData buildTheme(AppThemeSpec spec) {
   final base = ColorScheme.fromSeed(
     seedColor: spec.primary,
@@ -160,9 +204,16 @@ ThemeData buildTheme(AppThemeSpec spec) {
   final dark = spec.brightness == Brightness.dark;
   final scheme = base.copyWith(
     primary: spec.primary,
-    onPrimary: dark ? const Color(0xFF1A1206) : Colors.white,
+    onPrimary: contrastingText(spec.primary),
     secondary: spec.secondary,
+    onSecondary: contrastingText(spec.secondary),
     surface: spec.surface,
+    onSurface: contrastingText(spec.surface),
+    onSurfaceVariant: Color.lerp(
+      contrastingText(spec.surface),
+      spec.surface,
+      0.25,
+    ),
     surfaceContainerLow: Color.alphaBlend(
       spec.primary.withValues(alpha: dark ? 0.06 : 0.04),
       spec.surface,
@@ -176,7 +227,8 @@ ThemeData buildTheme(AppThemeSpec spec) {
     'DejaVu Serif',
     'Times New Roman',
   ];
-  final text = ThemeData(brightness: spec.brightness).textTheme;
+  final text = ThemeData(colorScheme: scheme).textTheme
+      .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
   TextStyle? t(TextStyle? s) => titles == null
       ? s
       : s?.copyWith(fontFamily: titles, fontFamilyFallback: serifFallback);
@@ -223,6 +275,7 @@ ThemeData buildTheme(AppThemeSpec spec) {
         emblem: spec.emblem,
         glow: spec.glow,
         headlineFamily: titles,
+        radius: spec.radius,
       ),
     ],
   );

@@ -4,6 +4,9 @@ import '../app/task_controller.dart';
 import '../storage/task_store.dart';
 import 'task_actions.dart';
 import 'themes.dart';
+import 'scale_settings_card.dart';
+import 'theme_customization_card.dart';
+import 'fine_slider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key, required this.controller, this.version = ''});
@@ -21,54 +24,12 @@ class SettingsPage extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
         child: ListView(
+          key: const Key('settings-list'),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
           children: [
             Text('Görünüm ve boyut', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Arayüz ölçeği: %${(settings.safeScale * 100).round()}',
-                      key: const Key('scale-label'),
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Yazılar, düğmeler ve simgeler birlikte büyür. Değişiklik hemen uygulanır ve bu cihazda saklanır. Dar ekranlarda büyütme ekrana göre sınırlandırılır.',
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final scale in [0.8, 1.0, 1.25, 1.5, 1.75, 2.0])
-                          ChoiceChip(
-                            key: Key('scale-${(scale * 100).round()}'),
-                            label: Text('%${(scale * 100).round()}'),
-                            selected: settings.safeScale == scale,
-                            onSelected: (_) => controller.updateSettings(
-                              settings.copyWith(uiScale: scale),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      key: const Key('scale-reset'),
-                      onPressed: () => controller.updateSettings(
-                        settings.copyWith(uiScale: 1.0),
-                      ),
-                      icon: const Icon(Icons.restart_alt),
-                      label: const Text('Varsayılan boyuta dön'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            ScaleSettingsCard(controller: controller),
             const SizedBox(height: 20),
             Text('Tema', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
@@ -81,11 +42,18 @@ class SettingsPage extends StatelessWidget {
                     spec: t,
                     selected: themeById(settings.themeId).id == t.id,
                     onTap: () => controller.updateSettings(
-                      settings.copyWith(themeId: t.id),
+                      settings.copyWith(
+                        themeId: t.id,
+                        customTheme: settings.customTheme.copyWith(
+                          enabled: false,
+                        ),
+                      ),
                     ),
                   ),
               ],
             ),
+            const SizedBox(height: 20),
+            ThemeCustomizationCard(controller: controller),
             const SizedBox(height: 20),
             Card(
               child: SwitchListTile(
@@ -100,6 +68,46 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
+            if (settings.gameMode) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Günlük hedef', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Günde kaç görev bitirmek istiyorsun? İlerleme yalnız işaretlediğin görevlerden hesaplanır.',
+                      ),
+                      const SizedBox(height: 12),
+                      FineSlider(
+                        id: 'daily-goal',
+                        label: 'Hedef',
+                        value: settings.dailyGoal.clamp(1, 20),
+                        min: 1,
+                        max: 20,
+                        onChanged: (v) => controller.updateSettings(
+                          settings.copyWith(dailyGoal: v),
+                        ),
+                      ),
+                      SwitchListTile(
+                        key: const Key('celebration-effects'),
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Kutlama efektleri'),
+                        subtitle: const Text(
+                          'Konfeti ve seviye animasyonu. Cihazın hareket azaltma ayarına uyulur.',
+                        ),
+                        value: settings.celebrationEffects,
+                        onChanged: (v) => controller.updateSettings(
+                          settings.copyWith(celebrationEffects: v),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             Text('Yedek', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),

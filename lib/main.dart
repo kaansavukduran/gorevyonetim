@@ -6,7 +6,7 @@ import 'src/ui/app.dart';
 
 const String appVersion = String.fromEnvironment(
   'APP_VERSION',
-  defaultValue: '1.1.0',
+  defaultValue: '1.2.0',
 );
 
 Future<void> main() async {

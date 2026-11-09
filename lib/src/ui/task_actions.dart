@@ -33,6 +33,7 @@ Future<void> addTaskWithEditor(
   required LocalDate start,
   String initialTitle = '',
   RepeatRule? initialRule,
+  ClockTime? initialTime,
 }) async {
   final draft = await showTaskEditor(
     context,
@@ -40,6 +41,7 @@ Future<void> addTaskWithEditor(
     today: controller.today,
     initialTitle: initialTitle,
     initialRule: initialRule,
+    initialTime: initialTime,
   );
   if (draft == null) return;
   controller.addTask(

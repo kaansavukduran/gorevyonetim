@@ -118,11 +118,11 @@ class HeroStrip extends StatelessWidget {
       key: const Key('hero-strip'),
       color: theme.colorScheme.surface.withValues(alpha: 0.85),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(style.radius),
         side: BorderSide(color: style.cardBorder),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(style.radius),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
@@ -191,7 +191,15 @@ T withGameFeedback<T>(
   T Function() change,
 ) {
   if (!controller.settings.gameMode) return change();
+  final animate =
+      controller.settings.celebrationEffects &&
+      !MediaQuery.disableAnimationsOf(context);
   final before = controller.profile;
+  int doneToday() => controller.data
+      .tasksOn(controller.today)
+      .where((t) => controller.data.isDone(t.id, controller.today))
+      .length;
+  final beforeCount = doneToday();
   final result = change();
   final after = controller.profile;
   final gained = after.totalXp - before.totalXp;
@@ -203,7 +211,12 @@ T withGameFeedback<T>(
           after.badges[i].name,
     ];
     final perfect = after.willpower > before.willpower;
-    if (perfect) showConfetti(context);
+    final goalReached =
+        beforeCount < controller.settings.dailyGoal &&
+        doneToday() >= controller.settings.dailyGoal;
+    if ((perfect || goalReached) && controller.settings.celebrationEffects) {
+      showConfetti(context);
+    }
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
@@ -214,6 +227,7 @@ T withGameFeedback<T>(
           [
             '+$gained XP',
             if (perfect) 'Mükemmel gün! +1 İrade',
+            if (goalReached) 'Günlük hedef tamam!',
             if (opened.isNotEmpty) 'Yeni rozet: ${opened.join(', ')}',
           ].join('   ·   '),
         ),
@@ -222,7 +236,7 @@ T withGameFeedback<T>(
     if (after.level > before.level) {
       showDialog<void>(
         context: context,
-        builder: (_) => LevelUpDialog(profile: after),
+        builder: (_) => LevelUpDialog(profile: after, animate: animate),
       );
     }
   }
@@ -230,9 +244,10 @@ T withGameFeedback<T>(
 }
 
 class LevelUpDialog extends StatelessWidget {
-  const LevelUpDialog({super.key, required this.profile});
+  const LevelUpDialog({super.key, required this.profile, this.animate = true});
 
   final GameProfile profile;
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +261,9 @@ class LevelUpDialog extends StatelessWidget {
         children: [
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.4, end: 1),
-            duration: const Duration(milliseconds: 600),
+            duration: animate
+                ? const Duration(milliseconds: 600)
+                : Duration.zero,
             curve: Curves.elasticOut,
             builder: (_, v, child) => Transform.scale(scale: v, child: child),
             child: LevelBadge(level: profile.level, size: 96),
@@ -356,7 +373,7 @@ class QuestCard extends StatelessWidget {
       key: const Key('quest-card'),
       color: theme.colorScheme.surface.withValues(alpha: 0.8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(style.radius),
         side: BorderSide(color: style.cardBorder),
       ),
       child: Padding(
@@ -487,11 +504,57 @@ class ActivityHeatmap extends StatelessWidget {
 
 /// A short burst of confetti over the screen (perfect day).
 void showConfetti(BuildContext context) {
+  if (MediaQuery.disableAnimationsOf(context)) return;
   final overlay = Overlay.maybeOf(context);
   if (overlay == null) return;
   late OverlayEntry entry;
   entry = OverlayEntry(builder: (_) => _Confetti(onDone: () => entry.remove()));
   overlay.insert(entry);
+}
+
+/// An adjustable goal based only on actual completed tasks; it grants no XP.
+class DailyGoalProgress extends StatelessWidget {
+  const DailyGoalProgress({super.key, required this.done, required this.goal});
+  final int done;
+  final int goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = done >= goal;
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      key: const Key('daily-goal'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              completed ? Icons.emoji_events : Icons.flag_outlined,
+              size: 18,
+              color: scheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                completed
+                    ? 'Günlük hedef tamam! $done / $goal'
+                    : 'Günlük hedef: $done / $goal',
+                key: const Key('daily-goal-label'),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LinearProgressIndicator(
+          key: const Key('daily-goal-progress'),
+          value: (done / goal).clamp(0.0, 1.0),
+          minHeight: 5,
+          color: GameStyle.of(context).xp,
+        ),
+      ],
+    );
+  }
 }
 
 class _Confetti extends StatefulWidget {

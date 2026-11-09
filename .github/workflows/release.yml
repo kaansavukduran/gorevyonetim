@@ -13,7 +13,7 @@ on:
 
 env:
   FLUTTER_VERSION: "3.47.6"
-  APP_VERSION: "1.1.0"
+  APP_VERSION: "1.2.0"
 
 permissions:
   contents: read
@@ -217,7 +217,11 @@ jobs:
       - name: Release notes
         run: |
           cat > notes.md <<'NOTES'
-          Arayüz ölçeği (%80–%200), telefon ekranına uyarlanan görev kartları, Android cihaz içi kayıt ve dosya seçicisiyle yedekleme. Karakter sınıfı ve hızlı ayar değişikliklerinin kalıcı kaydı düzeltildi.
+          Görevleri Gün ekranında farenin sol tuşuyla soldaki tutamaçtan yukarı/aşağı sürükleyerek sırala. Manuel sıra kalıcıdır; "Saate göre" seçeneği ayrıdır. Görev kartından ve hızlı eklemeden 24 saat biçiminde saat gir, değiştir veya kaldır.
+
+          Arayüz ölçeği artık %1 adımlı kaydırma çubuğu, doğrudan yüzde girişi ve anlık örnek önizlemesi içerir. Özel temada altı bağımsız renk, renk alanı/ton/RGB/HEX seçici, açık-koyu görünüm, hassas kart köşesi ve başlık/parlama ayarları vardır.
+
+          Oyun modu: ayarlanabilir günlük görev hedefi ve gerçek tiklerden hesaplanan ilerleme; hedefe ulaşınca kutlama. Hedefi/temayı değiştirmek XP kazandırmaz. Kutlama efektleri kapatılabilir ve cihazın hareket azaltma tercihi korunur.
 
           **Windows:** `Gunluk-Gorevler-Windows-Kurulum.exe` kurar (Başlat menüsü, isteğe bağlı masaüstü kısayolu). Kurulumsuz: `Gunluk-Gorevler-Windows-portable.zip` aç, `gunluk_gorevler.exe`. SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır.
 

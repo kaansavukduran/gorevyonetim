@@ -13,7 +13,7 @@ xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux     
 flutter build linux --release && xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke
 ```
 
-Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler üç sistemde de koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz ve Android önizleme APK numaralı `v1.1.0-build.N` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
+Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler üç sistemde de koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz ve Android önizleme APK numaralı `v1.2.0-build.N` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
 
 ## Kurallar (bozma)
 
@@ -26,3 +26,5 @@ Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.
 - Her davranış değişikliği test ister; testlerin hatayı gerçekten yakaladığını bir mutasyonla göster.
 
 Devam kontrol noktası: `FORGE.md`. Android özel dosya klasörü ve sistem dosya seçicisi yerel MethodChannel ile sağlanır; üçüncü taraf çalışma zamanı paketi eklenmedi. Arayüz ölçeği `InterfaceScale` ile uygulanır; işletim sisteminin metin büyütmesi korunur.
+
+Kullanıcının ayrıntılı ürün yönü `FORGE_PROMPT.md` içinde. Gün ekranı manuel sıralama ve saat sırasını ayırır; sürükleme manuel sıraya geçirir ve gizli görevlerin yerlerini korur. Günlük hedef yalnız gerçek tik sayısını gösterir, XP kuralını değiştirmez. Renk/ölçek/hedef ayarları için XP verme. Renk seçicinin iptalinde hiçbir ayar yazılmaz.

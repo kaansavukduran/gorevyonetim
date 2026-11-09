@@ -281,6 +281,62 @@ void main() {
     expect(c.data.stepsDone(t.id, c.today), {isin.id});
   });
 
+  test(
+    'reordering a visible subset preserves hidden slots, ticks and saved order',
+    () async {
+      final a = c.addTask(title: 'A', rule: const DailyRule(), start: c.today);
+      final hidden = c.addTask(
+        title: 'Gizli',
+        rule: OnceRule(c.today.addDays(1)),
+        start: c.today.addDays(1),
+      );
+      final b = c.addTask(title: 'B', rule: const DailyRule(), start: c.today);
+      c.toggle(a.id, c.today);
+      c.reorderVisible([a.id, b.id], 1, 0);
+      expect(c.data.tasks.map((t) => t.id), [b.id, hidden.id, a.id]);
+      expect(c.data.isDone(a.id, c.today), isTrue);
+      await c.saved;
+      expect(decodeTaskData(store.saved!).tasks.map((t) => t.id), [
+        b.id,
+        hidden.id,
+        a.id,
+      ]);
+      expect(() => c.reorderVisible([a.id, a.id], 0, 1), throwsArgumentError);
+      expect(c.data.tasks.map((t) => t.id), [b.id, hidden.id, a.id]);
+    },
+  );
+
+  test(
+    'editing only time preserves task details, steps and historical ticks',
+    () async {
+      final task = c.addTask(
+        title: 'A',
+        note: 'Not',
+        rule: const DailyRule(),
+        start: c.today,
+        difficulty: Difficulty.zor,
+        steps: ['Adım'],
+      );
+      c.toggleStep(task.id, c.today, task.steps.single.id);
+      final completions = c.data.completions;
+      c.setTaskTime(task.id, ClockTime(22, 45));
+      var updated = c.data.taskById(task.id)!;
+      expect(updated.note, 'Not');
+      expect(updated.difficulty, Difficulty.zor);
+      expect(updated.steps.single.id, task.steps.single.id);
+      expect(updated.time, ClockTime(22, 45));
+      expect(c.data.completions, completions);
+      expect(c.data.stepsDone(task.id, c.today), {task.steps.single.id});
+      c.setTaskTime(task.id, null);
+      updated = c.data.taskById(task.id)!;
+      expect(updated.time, isNull);
+      expect(updated.note, 'Not');
+      expect(c.data.completions, completions);
+      await c.saved;
+      expect(decodeTaskData(store.saved!).taskById(task.id)!.note, 'Not');
+    },
+  );
+
   test('difficulty and time are saved and can be cleared', () {
     final t = c.addTask(
       title: 'Kitap',

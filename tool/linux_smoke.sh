@@ -33,12 +33,13 @@ if [ -e "$DATA/gorevler.json" ]; then echo "FAIL: first start wrote a file"; exi
 echo "PASS: first start wrote nothing"
 
 # The quick-add field sits under the hero strip, the quest board and the week strip.
+# The task checkbox follows the manual-order grip, daily goal and sort controls.
 xdotool mousemove 520 426 click 1
 sleep 0.5
 xdotool type --delay 40 "Su ic"
 xdotool key Return
 sleep 1.5
-xdotool mousemove 290 575 click 1
+xdotool mousemove 322 668 click 1
 sleep 1.5
 import -window root "$OUT/2-added-and-ticked.png"
 stop_app

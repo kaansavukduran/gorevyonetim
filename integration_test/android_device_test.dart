@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gunluk_gorevler/src/app/settings.dart';
+import 'package:gunluk_gorevler/src/app/theme_customization.dart';
 import 'package:gunluk_gorevler/src/app/task_controller.dart';
 import 'package:gunluk_gorevler/src/domain/repeat_rule.dart';
 import 'package:gunluk_gorevler/src/storage/default_store.dart';
@@ -25,13 +26,27 @@ void main() {
     first.toggle(task.id, first.today);
     await first.saved;
     await first.updateSettings(
-      const AppSettings(uiScale: 1.5, charClass: 'buyucu'),
+      const AppSettings(
+        uiScale: 1.37,
+        charClass: 'buyucu',
+        dailyGoal: 7,
+        sortByTime: true,
+        customTheme: ThemeCustomization(
+          enabled: true,
+          primary: 0x10B981,
+          radius: 23,
+        ),
+      ),
     );
     final second = TaskController(store: await createDefaultStore());
     await second.load();
     expect(second.data.taskById(task.id)?.title, 'Android yeniden açılış');
     expect(second.data.isDone(task.id, second.today), isTrue);
-    expect(second.settings.uiScale, 1.5);
+    expect(second.settings.uiScale, 1.37);
+    expect(second.settings.dailyGoal, 7);
+    expect(second.settings.sortByTime, isTrue);
+    expect(second.settings.customTheme.primary, 0x10B981);
+    expect(second.settings.customTheme.radius, 23);
     expect(second.settings.charClass, 'buyucu');
     first.dispose();
     second.dispose();

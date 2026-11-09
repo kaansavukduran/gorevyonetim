@@ -5,6 +5,7 @@ import '../domain/repeat_rule.dart';
 import '../domain/task.dart';
 import '../domain/turkish_dates.dart';
 import 'task_actions.dart';
+import 'themes.dart';
 
 enum _Filter { active, ended, all }
 
@@ -33,17 +34,11 @@ class _TasksPageState extends State<TasksPage> {
   }
 
   void _reorder(List<Task> shown, int oldIndex, int newIndex) {
-    final moved = [...shown];
-    moved.insert(newIndex, moved.removeAt(oldIndex));
-    // Put the moved tasks back into the places the shown tasks held in the
-    // full list, so hidden tasks keep their positions.
-    final all = [for (final t in controller.data.tasks) t.id];
-    final shownIds = {for (final t in shown) t.id};
-    var k = 0;
-    for (var i = 0; i < all.length; i++) {
-      if (shownIds.contains(all[i])) all[i] = moved[k++].id;
-    }
-    controller.reorder(all);
+    controller.reorderVisible(
+      [for (final task in shown) task.id],
+      oldIndex,
+      newIndex,
+    );
   }
 
   @override
@@ -177,7 +172,7 @@ class _TaskCard extends StatelessWidget {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(GameStyle.of(context).radius),
           side: BorderSide(color: scheme.outlineVariant),
         ),
         clipBehavior: Clip.antiAlias,
@@ -214,6 +209,7 @@ class _TaskCard extends StatelessWidget {
                       Text(
                         [
                           if (rule != null) describeRule(rule),
+                          if (task.time != null) task.time!.format(),
                           state,
                         ].join('  ·  '),
                         style: small,

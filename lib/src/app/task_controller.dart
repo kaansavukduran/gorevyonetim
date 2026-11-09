@@ -239,6 +239,30 @@ class TaskController extends ChangeNotifier {
 
   void reorder(List<String> ids) => _apply(_data.reordered(ids));
 
+  /// Reorders a visible subset without moving hidden tasks out of their slots.
+  /// Flutter's onReorderItem supplies an index after the removal.
+  void reorderVisible(List<String> shown, int oldIndex, int newIndex) {
+    if (shown.toSet().length != shown.length ||
+        shown.any((id) => _data.taskById(id) == null)) {
+      throw ArgumentError('Görev sırası geçerli değil');
+    }
+    if (oldIndex == newIndex) return;
+    final moved = [...shown];
+    moved.insert(newIndex, moved.removeAt(oldIndex));
+    final visible = shown.toSet();
+    var i = 0;
+    reorder([
+      for (final task in _data.tasks)
+        visible.contains(task.id) ? moved[i++] : task.id,
+    ]);
+  }
+
+  /// Editing only a time must preserve notes, steps and every historical tick.
+  void setTaskTime(String id, ClockTime? time) {
+    final task = _require(id);
+    _apply(_data.withTask(task.copyWith(time: () => time)));
+  }
+
   /// Builds steps from titles, keeping the id of a step whose title is
   /// unchanged (so its ticks stay).
   List<TaskStep> _stepsFrom(List<String> titles, List<TaskStep> old) {
