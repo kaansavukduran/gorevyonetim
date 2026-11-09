@@ -4,7 +4,7 @@ Son çalışma: 9 Kasım 2026, 1.2.0 özelleştirme ve oyunlaştırma turu. Tek 
 
 ## Çalışma durumu
 
-1.2.0 turu tamamlandı ve yayımlandı. Aktif çalışma kilidi yok; sonraki saatlik tur aşağıdaki açık kabul maddelerinden devam edebilir.
+9 Kasım 2026 14.38 Europe/Istanbul: Android sistem dosya seçicisi uçtan uca kabulü ve özel veri arayüzü üzerinde canlı çalışma var. Kilit 9 Kasım 2026 16.00 Europe/Istanbul’a kadar geçerli; diğer turlar kaynak kodunu değiştirmeden sonraki tura bırakmalı. Çalışma tamamlanınca kilit kaldırılır.
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
 
