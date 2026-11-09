@@ -13,7 +13,7 @@ xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux     
 flutter build linux --release && xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke
 ```
 
-Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler üç sistemde de koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz ve Android önizleme APK numaralı `v1.2.1-build.N` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
+Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler dört platformda da koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz ve Android önizleme APK numaralı `v1.2.1-build.N` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
 
 ## Kurallar (bozma)
 
