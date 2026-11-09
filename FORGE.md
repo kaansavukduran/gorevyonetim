@@ -1,10 +1,10 @@
 # Günlük Görevler geliştirme kontrol noktası
 
-Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukduran/gorevyonetim`. Başka depoları değiştirme.
+Son çalışma: 9 Kasım 2026, 1.2.0 özelleştirme ve oyunlaştırma turu. Tek hedef depo: `kaansavukduran/gorevyonetim`. Başka depoları değiştirme.
 
-## Aktif çalışma kilidi
+## Çalışma durumu
 
-9 Kasım 2026 13.25 Europe/Istanbul: kullanıcının yeni isteği üzerinde canlı Codex çalışması sürüyor: Gün ekranında fareyle sıralama, kolay saat girişi, renk seçicili ayrıntılı tema. Kilit 9 Kasım 2026 15.30 Europe/Istanbul’a kadar geçerli. Bu süre içinde saatlik tur kaynak kodunu değiştirmeden sonraki tura bırakmalı; ana çalışma sonunda kilit kaldırılır.
+1.2.0 turu tamamlandı ve yayımlandı. Aktif çalışma kilidi yok; sonraki saatlik tur aşağıdaki açık kabul maddelerinden devam edebilir.
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
 
@@ -17,11 +17,11 @@ Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliğ
 - [x] Gerçek görevlerden hesaplanan 1–20 arası günlük hedef ve hedef kutlaması. Hedef/tema ayarı değiştirmek XP vermez; azaltılmış hareket ve efekt kapatma tercihi korunur.
 - [x] Zenginleştirilmiş ürün promptu [FORGE_PROMPT.md](FORGE_PROMPT.md) içinde ve saatlik otomasyonda kayıtlı. Oyunlaştırma, hassas özelleştirme ve gerçek test/yayın şartları kalıcı talimattır.
 - [x] Yerel analiz temiz; 154 test başarılı. Altı mutasyon testlerce yakalandı (paleti kaydetmeme, sıralamayı yok sayma, saat düzenlerken notu silme, hedef için fazladan tik üretme, hassas ölçeği yok sayma, ayrı sistem hareket azaltma bayrağını yok sayma). Mutasyonlar geri alındı.
-- Derleme 10, son erişilebilirlik ekinde atlanan bir `curly_braces_in_flow_control_structures` biçim kuralı yüzünden durdu; yayınlanmadı. Düzeltme sonrası yerel analiz temiz ve yalnız `reduceMotion` açık regresyon testi başarılı; derleme 11 izleniyor.
+- Derleme 10, son erişilebilirlik ekinde atlanan bir `curly_braces_in_flow_control_structures` biçim kuralı yüzünden durdu; yayınlanmadı. Düzeltme sonrası yerel analiz temiz ve yalnız `reduceMotion` açık regresyon testi başarılı; sorun derleme 12’de kapandı.
 - [x] Sistem `reduceMotion` ve `disableAnimations` bayrakları ayrı ayrı ele alınır; yalnız `reduceMotion` açıkken de kutlama engellenir. Bu regresyon test ve mutasyonla doğrulandı.
 - [x] Chromium/Playwright: doğrudan %137, HEX ile `#10B981` uygulama ve 390 pikselde renk seçici açılışı doğrulandı; tarayıcı hatası yok.
 - Android derleme 11: cihaz içi yeni ayar kaydı/yeniden açılış testi geçti. Diğer entegrasyon testinde açık gerçek IME/varsayılan üst hizalama nedeniyle görev işaretçisi görünür alandan kaydı. Test, klavyeyi kapatıp satırı ortalayarak gerçek hit-test görünürlüğünü denetleyecek biçimde düzeltildi; ürünün masaüstü/klavye odağı davranışı değiştirilmedi.
-- [ ] 1.2.0 için dört platformun CI derlemesini ve numaralı Releases kaydını doğrula. Önceki 1.1.0 sürümünü yeni özellikler içeriyor diye sunma.
+- [x] **1.2.0 yayımlandı:** [v1.2.0-build.12](https://github.com/kaansavukduran/gorevyonetim/releases/tag/v1.2.0-build.12). [CI turu 12](https://github.com/kaansavukduran/gorevyonetim/actions/runs/42607391257) dört platformda başarılı. Windows kurulum EXE/ZIP, Linux tar.gz, macOS DMG/ZIP, Android APK ve SHA256SUMS olmak üzere 7 varlık doğrulandı. Kaynak commit `dbb108060151c2a7614f03cbf4294586620dabd3`; sonradan yalnız bu kontrol noktası güncellendi. Android’in iki entegrasyon testi de geçti; renk, %137 ölçek, hedef ve sıra tercihi gerçek cihaz deposundan yeniden açıldı.
 
 ## Önceki turun kabul ölçütleri ve durum
 
@@ -36,7 +36,7 @@ Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliğ
 - [ ] Android kalıcı dağıtım imzası ve güncelleme testi: şimdilik test anahtarıyla imzalı önizleme; farklı derlemeler arasında doğrudan güncelleme garantisi yok. İmzalama sırrını koda/artefakta koyma; kullanıcıya ait kalıcı anahtarın güvenli depo secrets yapılandırması gerekiyor. Bağlı GitHub entegrasyonuyla repo secrets listesi denendi: HTTP 403 `Resource not accessible by integration`. Bu izin değişmeden aynı isteği tekrar tekrar deneme; önizleme paketi bu engelden bağımsız üretilebilir.
 - [ ] Son cihaz kabul turu: Windows kurulum/yükseltme, macOS açılış, Linux açılış ve Android telefon üzerinde görev/yedek/görünüm akışlarının sonuçlarını kaydet. CI açılış kontrolünü elle cihaz kabulü gibi sunma.
 
-## Bu turun doğrulaması
+## 1.1.0 turunun doğrulaması (tarihçe)
 
 - Flutter 3.47.6 / Dart 3.13.5.
 - `flutter analyze`: temiz.
@@ -57,6 +57,6 @@ Linux integration işi yalnız `file_roundtrip_test.dart` çalıştırmalı; And
 
 ## Tam sonraki adım
 
-Önce 1.2.0 turunun dört platform CI sonucunu ve Releases varlıklarını doğrula. Sonra Android sistem dosya seçicisini gerçek emülatör UI akışıyla doğrula (JSON oluşturma, geri seçme, Türkçe içerik, iptal, bozuk yedeği reddetme). Gizli Android dosya yolunu/masaüstü klasör düğmesini telefon arayüzünden sadeleştir. Kalıcı APK imzası için yukarıdaki gerçek secrets izin engelini koru; imza sorununu çözülmüş sayma. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.
+1.2.0 yayın doğrulaması tamamlandı. Şimdi Android sistem dosya seçicisini gerçek emülatör UI akışıyla doğrula (JSON oluşturma, geri seçme, Türkçe içerik, iptal, bozuk yedeği reddetme). Gizli Android dosya yolunu/masaüstü klasör düğmesini telefon arayüzünden sadeleştir. Kalıcı APK imzası için yukarıdaki gerçek secrets izin engelini koru; imza sorununu çözülmüş sayma. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.
 
 Tamamlanma: yukarıdaki açık kabul maddeleri gerçek kanıtla kapanınca saatlik otomasyonu durdur. Somut kullanıcı ayarı gerektiren engeli açıkça kaydet; tamamlandı sayma.
