@@ -18,7 +18,7 @@ void showUndoSnack(
     SnackBar(
       content: Text(message),
       behavior: SnackBarBehavior.floating,
-      width: 520,
+      width: MediaQuery.sizeOf(context).width > 560 ? 520 : null,
       duration: const Duration(seconds: 6),
       action: onUndo == null
           ? null

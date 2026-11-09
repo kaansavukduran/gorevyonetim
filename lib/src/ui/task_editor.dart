@@ -221,21 +221,37 @@ class _TaskEditorState extends State<_TaskEditor> {
             const SizedBox(height: 16),
             Text('Zorluk', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            SegmentedButton<Difficulty>(
-              key: const Key('editor-difficulty'),
-              showSelectedIcon: false,
-              segments: [
-                for (final d in Difficulty.values)
-                  ButtonSegment(
-                    value: d,
-                    label: Text('${d.label} · ${d.baseXp} XP'),
-                  ),
-              ],
-              selected: {_difficulty},
-              onSelectionChanged: (v) => setState(() => _difficulty = v.first),
-            ),
+            if (MediaQuery.sizeOf(context).width < 600)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final d in Difficulty.values)
+                    ChoiceChip(
+                      label: Text('${d.label} · ${d.baseXp} XP'),
+                      selected: _difficulty == d,
+                      onSelected: (_) => setState(() => _difficulty = d),
+                    ),
+                ],
+              )
+            else
+              SegmentedButton<Difficulty>(
+                key: const Key('editor-difficulty'),
+                showSelectedIcon: false,
+                segments: [
+                  for (final d in Difficulty.values)
+                    ButtonSegment(
+                      value: d,
+                      label: Text('${d.label} · ${d.baseXp} XP'),
+                    ),
+                ],
+                selected: {_difficulty},
+                onSelectionChanged: (v) =>
+                    setState(() => _difficulty = v.first),
+              ),
             const SizedBox(height: 16),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const SizedBox(width: 90, child: Text('Hatırlatma')),
                 OutlinedButton.icon(
@@ -284,32 +300,53 @@ class _TaskEditorState extends State<_TaskEditor> {
             const SizedBox(height: 20),
             Text('Ne zaman?', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            SegmentedButton<_Kind>(
-              key: const Key('editor-kind'),
-              showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(
-                  value: _Kind.daily,
-                  label: Text('Her gün'),
-                  icon: Icon(Icons.repeat_rounded),
-                ),
-                ButtonSegment(
-                  value: _Kind.weekly,
-                  label: Text('Belirli günler'),
-                  icon: Icon(Icons.date_range_rounded),
-                ),
-                ButtonSegment(
-                  value: _Kind.once,
-                  label: Text('Tek sefer'),
-                  icon: Icon(Icons.event_rounded),
-                ),
-              ],
-              selected: {_kind},
-              onSelectionChanged: (s) => setState(() {
-                _kind = s.first;
-                _error = null;
-              }),
-            ),
+            if (MediaQuery.sizeOf(context).width < 600)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final kind in _Kind.values)
+                    ChoiceChip(
+                      label: Text(switch (kind) {
+                        _Kind.daily => 'Her gün',
+                        _Kind.weekly => 'Belirli günler',
+                        _Kind.once => 'Tek sefer',
+                      }),
+                      selected: _kind == kind,
+                      onSelected: (_) => setState(() {
+                        _kind = kind;
+                        _error = null;
+                      }),
+                    ),
+                ],
+              )
+            else
+              SegmentedButton<_Kind>(
+                key: const Key('editor-kind'),
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: _Kind.daily,
+                    label: Text('Her gün'),
+                    icon: Icon(Icons.repeat_rounded),
+                  ),
+                  ButtonSegment(
+                    value: _Kind.weekly,
+                    label: Text('Belirli günler'),
+                    icon: Icon(Icons.date_range_rounded),
+                  ),
+                  ButtonSegment(
+                    value: _Kind.once,
+                    label: Text('Tek sefer'),
+                    icon: Icon(Icons.event_rounded),
+                  ),
+                ],
+                selected: {_kind},
+                onSelectionChanged: (s) => setState(() {
+                  _kind = s.first;
+                  _error = null;
+                }),
+              ),
             const SizedBox(height: 12),
             if (_kind == _Kind.weekly) _weekdayPicker(theme),
             if (_kind == _Kind.once)

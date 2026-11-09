@@ -1,10 +1,10 @@
 ﻿; Inno Setup script for the Günlük Görevler Windows installer.
-; Built on a Windows host by .github/workflows/windows.yml;
+; Built on a Windows host by .github/workflows/release.yml;
 ; never built here. The app keeps its data under %APPDATA%\GunlukGorevler,
 ; outside the install folder, so uninstalling does not delete any task.
 #define AppName "Günlük Görevler"
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.1.0"
 #endif
 
 [Setup]

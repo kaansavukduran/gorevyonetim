@@ -86,6 +86,7 @@ class FileTaskStore implements TaskStore {
 
   /// Writes are queued so two saves never interleave.
   Future<void> _queue = Future.value();
+  Future<void> _settingsQueue = Future.value();
 
   String get _sep => Platform.pathSeparator;
   File get file => File('$directory${_sep}gorevler.json');
@@ -172,11 +173,19 @@ class FileTaskStore implements TaskStore {
       return AppSettings.decode(await _settingsFile.readAsString());
     } on FileSystemException {
       return const AppSettings();
+    } on FormatException {
+      return const AppSettings();
     }
   }
 
   @override
-  Future<void> saveSettings(AppSettings settings) async {
+  Future<void> saveSettings(AppSettings settings) {
+    final next = _settingsQueue.then((_) => _writeSettings(settings));
+    _settingsQueue = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> _writeSettings(AppSettings settings) async {
     await Directory(directory).create(recursive: true);
     final tmp = File('${_settingsFile.path}.tmp');
     await tmp.writeAsString(settings.encode(), flush: true);

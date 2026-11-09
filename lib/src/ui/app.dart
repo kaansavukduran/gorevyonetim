@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../app/task_controller.dart';
 import 'home_shell.dart';
+import 'interface_scale.dart';
 import 'themes.dart';
 
 class GunlukGorevlerApp extends StatelessWidget {
@@ -37,7 +38,10 @@ class GunlukGorevlerApp extends StatelessWidget {
                   : spec.gradient,
             ),
           ),
-          child: child,
+          child: InterfaceScale(
+            scale: controller.settings.safeScale,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
         home: HomeShell(controller: controller, version: version),
       );

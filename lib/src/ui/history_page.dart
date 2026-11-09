@@ -54,8 +54,7 @@ class _HistoryPageState extends State<HistoryPage> {
       if (s.todayPending) pending++;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -111,28 +110,22 @@ class _HistoryPageState extends State<HistoryPage> {
           child: _Legend(),
         ),
         const Divider(height: 1),
-        Expanded(
-          child: tasks.isEmpty
-              ? const SizedBox.shrink()
-              : Scrollbar(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _headerRow(theme, days, today),
-                          for (final t in tasks)
-                            _taskRow(theme, t, days, start, end, today),
-                          const SizedBox(height: 4),
-                          _totalRow(theme, tasks, days, today),
-                        ],
-                      ),
-                    ),
-                  ),
+        tasks.isEmpty
+            ? const SizedBox.shrink()
+            : SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _headerRow(theme, days, today),
+                    for (final t in tasks)
+                      _taskRow(theme, t, days, start, end, today),
+                    const SizedBox(height: 4),
+                    _totalRow(theme, tasks, days, today),
+                  ],
                 ),
-        ),
+              ),
       ],
     );
   }

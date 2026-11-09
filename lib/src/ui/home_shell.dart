@@ -68,7 +68,7 @@ class _HomeShellState extends State<HomeShell> {
     messenger.showSnackBar(
       SnackBar(
         key: const Key('reminder'),
-        width: 520,
+        width: MediaQuery.sizeOf(context).width > 560 ? 520 : null,
         duration: const Duration(seconds: 12),
         content: Text(
           'Hatırlatma: ${due.map((t) => '${t.time!.format()} ${t.title}').join(', ')}',

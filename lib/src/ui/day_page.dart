@@ -177,10 +177,12 @@ class _DayTitle extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '${longDate(day)}, ${weekdayName(day)}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Flexible(
+                        child: Text(
+                          '${longDate(day)}, ${weekdayName(day)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                       Icon(
@@ -549,12 +551,13 @@ class _QuickAddState extends State<_QuickAdd> {
                         color: scheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        _label(_repeat),
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                      if (MediaQuery.sizeOf(context).width >= 600)
+                        Text(
+                          _label(_repeat),
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
                         ),
-                      ),
                       Icon(
                         Icons.arrow_drop_down,
                         color: scheme.onSurfaceVariant,
@@ -717,6 +720,47 @@ class _TaskTileState extends State<TaskTile> {
       Difficulty.zor => scheme.error,
     };
 
+    final compact = MediaQuery.sizeOf(context).width < 700;
+    final details = <Widget>[
+      if (task.time != null)
+        chip(
+          late ? '${task.time!.format()} geçti' : task.time!.format(),
+          key: Key('task-time-${task.id}'),
+          icon: Icons.schedule,
+          color: late ? scheme.error : scheme.onSurfaceVariant,
+        ),
+      if (task.steps.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(left: 6),
+          child: TextButton.icon(
+            key: Key('task-steps-${task.id}'),
+            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            onPressed: () => setState(() => _open = !_open),
+            icon: Icon(_open ? Icons.expand_less : Icons.expand_more, size: 18),
+            label: Text('${stepsDone.length}/${task.steps.length} adım'),
+          ),
+        ),
+      if (game)
+        Tooltip(
+          message: '${task.difficulty.label}: ${task.difficulty.baseXp} XP',
+          child: chip(
+            task.difficulty.label,
+            key: Key('task-diff-${task.id}'),
+            color: diffColor,
+          ),
+        ),
+      if (streak >= 2)
+        Tooltip(
+          message: 'Üst üste $streak gün yapıldı',
+          child: chip(
+            '$streak gün',
+            key: Key('task-streak-${task.id}'),
+            icon: Icons.whatshot,
+            color: scheme.tertiary,
+          ),
+        ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       child: Material(
@@ -789,56 +833,15 @@ class _TaskTileState extends State<TaskTile> {
                         ],
                       ),
                     ),
-                    if (task.time != null)
-                      chip(
-                        late
-                            ? '${task.time!.format()} geçti'
-                            : task.time!.format(),
-                        key: Key('task-time-${task.id}'),
-                        icon: Icons.schedule,
-                        color: late ? scheme.error : scheme.onSurfaceVariant,
-                      ),
-                    if (task.steps.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: TextButton.icon(
-                          key: Key('task-steps-${task.id}'),
-                          style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          onPressed: () => setState(() => _open = !_open),
-                          icon: Icon(
-                            _open ? Icons.expand_less : Icons.expand_more,
-                            size: 18,
-                          ),
-                          label: Text(
-                            '${stepsDone.length}/${task.steps.length} adım',
-                          ),
-                        ),
-                      ),
-                    if (game)
-                      Tooltip(
-                        message:
-                            '${task.difficulty.label}: ${task.difficulty.baseXp} XP',
-                        child: chip(
-                          task.difficulty.label,
-                          key: Key('task-diff-${task.id}'),
-                          color: diffColor,
-                        ),
-                      ),
-                    if (streak >= 2)
-                      Tooltip(
-                        message: 'Üst üste $streak gün yapıldı',
-                        child: chip(
-                          '$streak gün',
-                          key: Key('task-streak-${task.id}'),
-                          icon: Icons.whatshot,
-                          color: scheme.tertiary,
-                        ),
-                      ),
+                    if (!compact) ...details,
                     TaskMenu(controller: controller, task: task),
                   ],
                 ),
+                if (compact && details.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(48, 4, 8, 0),
+                    child: Wrap(spacing: 4, runSpacing: 6, children: details),
+                  ),
                 if (_open && task.steps.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(40, 0, 8, 4),

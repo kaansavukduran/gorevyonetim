@@ -23,6 +23,53 @@ class SettingsPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
           children: [
+            Text('Görünüm ve boyut', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Arayüz ölçeği: %${(settings.safeScale * 100).round()}',
+                      key: const Key('scale-label'),
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Yazılar, düğmeler ve simgeler birlikte büyür. Değişiklik hemen uygulanır ve bu cihazda saklanır. Dar ekranlarda büyütme ekrana göre sınırlandırılır.',
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final scale in [0.8, 1.0, 1.25, 1.5, 1.75, 2.0])
+                          ChoiceChip(
+                            key: Key('scale-${(scale * 100).round()}'),
+                            label: Text('%${(scale * 100).round()}'),
+                            selected: settings.safeScale == scale,
+                            onSelected: (_) => controller.updateSettings(
+                              settings.copyWith(uiScale: scale),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      key: const Key('scale-reset'),
+                      onPressed: () => controller.updateSettings(
+                        settings.copyWith(uiScale: 1.0),
+                      ),
+                      icon: const Icon(Icons.restart_alt),
+                      label: const Text('Varsayılan boyuta dön'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             Text('Tema', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Wrap(
@@ -63,9 +110,9 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Görevlerini bir dosyaya kaydet (İndirilenler klasörüne) ya da '
+                      'Görevlerini bir dosyaya kaydet (masaüstünde İndirilenler, Android’de seçtiğin konum) ya da '
                       'daha önce kaydettiğin bir yedeği geri yükle. Başka bir '
-                      'bilgisayara taşımak için de kullanılır.',
+                      'cihaza taşımak için de kullanılır.',
                     ),
                     const SizedBox(height: 12),
                     Wrap(
@@ -100,7 +147,7 @@ class SettingsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Görevlerin yalnızca bu bilgisayarda, tek bir dosyada durur; '
+                      'Görevlerin yalnızca bu cihazda, tek bir dosyada durur; '
                       'internete hiçbir şey gönderilmez. Her gün otomatik yedek '
                       'alınır (son 14 gün).',
                     ),
@@ -169,7 +216,13 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _import(BuildContext context) async {
-    final candidates = await controller.store.importCandidates();
+    final List<BackupCandidate> candidates;
+    try {
+      candidates = await controller.store.importCandidates();
+    } catch (e) {
+      if (context.mounted) showUndoSnack(context, 'Yedek açılamadı: $e');
+      return;
+    }
     if (!context.mounted) return;
     final chosen = await showDialog<BackupCandidate>(
       context: context,

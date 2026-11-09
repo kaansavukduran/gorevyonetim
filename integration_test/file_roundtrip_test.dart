@@ -35,6 +35,12 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
     final id = first.data.tasks.single.id;
+    await tester.dragUntilVisible(
+      find.byKey(Key('task-check-$id')),
+      find.byType(CustomScrollView),
+      const Offset(0, -150),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(Key('task-check-$id')));
     await tester.pumpAndSettle();
     await first.saved;

@@ -1,19 +1,25 @@
 name: release
 
-# Builds Günlük Görevler for Windows, macOS and Linux, each on its own host
-# (the tests run on every one of them), starts each app once, and publishes
-# all downloads together as the pre-release "son-surum" (replaced by every
-# run). Nothing is signed.
+# Tests four platforms, checks desktop startup and Android storage on an emulator.
+# Only a successful main build publishes a new numbered prerelease.
+# Desktop packages are unsigned; the Android preview uses a debug signing key.
 on:
   workflow_dispatch:
   push:
-    branches: [main, "claude/**"]
+    branches: [main, "claude/**", "codex/**"]
+  pull_request:
+    branches: [main]
 
 env:
   FLUTTER_VERSION: "3.47.6"
+  APP_VERSION: "1.1.0"
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   windows:
@@ -32,7 +38,7 @@ jobs:
           flutter test
       - name: Build
         shell: bash
-        run: flutter build windows --release --dart-define=APP_VERSION=1.0.0+${{ github.run_number }}
+        run: flutter build windows --release --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ env.APP_VERSION }}+${{ github.run_number }}
       - name: Portable ZIP
         shell: pwsh
         run: |
@@ -44,7 +50,7 @@ jobs:
         shell: pwsh
         run: |
           choco install innosetup -y --no-progress
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" packaging/gunluk_gorevler.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=${{ env.APP_VERSION }} packaging/gunluk_gorevler.iss
       - name: Check the executable starts and writes nothing before a change
         shell: pwsh
         run: |
@@ -76,7 +82,7 @@ jobs:
           flutter analyze
           flutter test
       - name: Build
-        run: flutter build macos --release --dart-define=APP_VERSION=1.0.0+${{ github.run_number }}
+        run: flutter build macos --release --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ env.APP_VERSION }}+${{ github.run_number }}
       - name: Check the app starts and writes nothing before a change
         run: |
           APP=$(ls -d build/macos/Build/Products/Release/*.app)
@@ -126,7 +132,7 @@ jobs:
           flutter test
           xvfb-run -a flutter test integration_test -d linux
       - name: Build
-        run: flutter build linux --release --dart-define=APP_VERSION=1.0.0+${{ github.run_number }}
+        run: flutter build linux --release --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ env.APP_VERSION }}+${{ github.run_number }}
       - name: Mouse and keyboard smoke (first start writes nothing, add, tick, restart)
         run: xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh "$RUNNER_TEMP/smoke"
       - uses: actions/upload-artifact@v4
@@ -142,14 +148,60 @@ jobs:
           path: dist/Gunluk-Gorevler-linux-x64.tar.gz
           if-no-files-found: error
 
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - name: Test shared application code
+        run: |
+          flutter pub get --enforce-lockfile
+          dart format --output=none --set-exit-if-changed lib test integration_test
+          flutter analyze
+          flutter test
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android device storage and task round trip
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: flutter test integration_test -d emulator-5554
+      - name: Build preview APK
+        run: |
+          flutter build apk --release --build-number=${{ github.run_number }} --dart-define=APP_VERSION=${{ env.APP_VERSION }}+${{ github.run_number }}
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/Gunluk-Gorevler-Android-onizleme.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/Gunluk-Gorevler-Android-onizleme.apk
+          if-no-files-found: error
+
   publish:
-    needs: [windows, macos, linux]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [windows, macos, linux, android]
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: dist
-          pattern: "{windows,macos,linux}"
+          pattern: "{windows,macos,linux,android}"
           merge-multiple: true
       - name: Checksums
         working-directory: dist
@@ -157,19 +209,25 @@ jobs:
       - name: Release notes
         run: |
           cat > notes.md <<'NOTES'
+          Arayüz ölçeği (%80–%200), telefon ekranına uyarlanan görev kartları, Android cihaz içi kayıt ve dosya seçicisiyle yedekleme. Karakter sınıfı ve hızlı ayar değişikliklerinin kalıcı kaydı düzeltildi.
+
           **Windows:** `Gunluk-Gorevler-Windows-Kurulum.exe` kurar (Başlat menüsü, isteğe bağlı masaüstü kısayolu). Kurulumsuz: `Gunluk-Gorevler-Windows-portable.zip` aç, `gunluk_gorevler.exe`. SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır.
 
           **macOS:** `Gunluk-Gorevler-macOS.dmg` aç, uygulamayı Applications klasörüne sürükle. İmzasız olduğu için ilk açılışta uygulamaya sağ tık → Aç → Aç. Açılmazsa Sistem Ayarları → Gizlilik ve Güvenlik → "Yine de Aç".
 
           **Linux (x64):** `Gunluk-Gorevler-linux-x64.tar.gz` aç; `./bundle/gunluk_gorevler` ile çalıştır ya da `./install.sh` ile uygulama menüsüne kur. GTK 3 gerekir.
 
-          Görevler yalnızca bilgisayarında saklanır, internete hiçbir şey gönderilmez. Hiçbir dosya imzalı değil. SHA-256 değerleri `SHA256SUMS.txt` içinde.
+          **Android (önizleme):** `Gunluk-Gorevler-Android-onizleme.apk`. APK test anahtarıyla imzalanır; mağaza sürümü değildir ve sonraki önizlemeler aynı anahtarı kullanmayabilir. Kaldırmadan önce yedeği dışa aktar; uygulamayı kaldırmak cihaz içindeki görevleri siler. Kalıcı dağıtım anahtarı henüz yapılandırılmadı. Yedek alırken ve yüklerken Android dosya seçicisi açılır. Uygulama kapalıyken hatırlatma gönderilmez.
+
+          Görevler cihazında saklanır. Masaüstü paketleri kod imzası içermez. Android APK test imzalıdır. SHA-256 değerleri `SHA256SUMS.txt` içinde.
+
+          Bu paketler aynı commit'ten, dört platformun kontrolleri başarılı olduktan sonra yayımlanır. Android emülatör testi cihaz içi veri ve yeniden açılış kontrolünü kapsar; yerel dosya seçicisi elle cihaz kontrolü bekliyor.
           NOTES
       - name: Publish the downloads
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release delete son-surum --yes --cleanup-tag || true
-          gh release create son-surum dist/* --prerelease --target "${{ github.sha }}" \
-            --title "Günlük Görevler (Windows, macOS, Linux)" --notes-file notes.md
+          TAG="v${{ env.APP_VERSION }}-build.${{ github.run_number }}"
+          gh release create "$TAG" dist/* --prerelease --target "${{ github.sha }}" \
+            --title "Günlük Görevler ${{ env.APP_VERSION }}.${{ github.run_number }} (Windows, macOS, Linux, Android)" --notes-file notes.md

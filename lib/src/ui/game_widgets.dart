@@ -208,7 +208,7 @@ T withGameFeedback<T>(
     messenger.showSnackBar(
       SnackBar(
         key: const Key('xp-snack'),
-        width: 520,
+        width: MediaQuery.sizeOf(context).width > 560 ? 520 : null,
         duration: const Duration(seconds: 3),
         content: Text(
           [
@@ -365,13 +365,17 @@ class QuestCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  'Görevler tahtası',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontFamily: style.headlineFamily,
+                Expanded(
+                  child: Text(
+                    'Görevler tahtası',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontFamily: style.headlineFamily,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Icon(Icons.savings, size: 18, color: style.xp),
                 const SizedBox(width: 4),
                 Text(

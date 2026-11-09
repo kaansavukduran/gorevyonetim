@@ -210,6 +210,27 @@ void main() {
     );
   });
 
+  test(
+    'rapid settings changes are serialized and the last choice survives',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('gg-settings');
+      addTearDown(() => dir.delete(recursive: true));
+      final store = FileTaskStore(dir.path);
+      await Future.wait([
+        for (var i = 0; i < 20; i++)
+          store.saveSettings(
+            AppSettings(uiScale: i == 19 ? 1.75 : 1.0, charClass: 'buyucu'),
+          ),
+      ]);
+      final restarted = FileTaskStore(dir.path);
+      expect((await restarted.loadSettings()).uiScale, 1.75);
+      expect((await restarted.loadSettings()).charClass, 'buyucu');
+      await File('${dir.path}${Platform.pathSeparator}ayarlar.json')
+          .writeAsBytes([0xff]);
+      expect((await restarted.loadSettings()).uiScale, 1.0);
+    },
+  );
+
   test('settings, export, import candidates and keep-before-import', () async {
     final dir = await Directory.systemTemp.createTemp('gunluk_gorevler_sx');
     addTearDown(() => dir.delete(recursive: true));

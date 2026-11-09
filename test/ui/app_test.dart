@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gunluk_gorevler/src/app/task_controller.dart';
+import 'package:gunluk_gorevler/src/app/settings.dart';
 import 'package:gunluk_gorevler/src/domain/codec.dart';
 import 'package:gunluk_gorevler/src/domain/local_date.dart';
 import 'package:gunluk_gorevler/src/domain/repeat_rule.dart';
@@ -54,6 +55,99 @@ Future<void> quickAdd(WidgetTester tester, String title) async {
 }
 
 void main() {
+  testWidgets('scale presets resize hit targets, save and reset', (
+    tester,
+  ) async {
+    final h = await pumpApp(tester, size: const Size(1600, 1200));
+    await quickAdd(tester, 'Ölçek testi');
+    final id = h.controller.data.tasks.single.id;
+    final before =
+        tester.getBottomRight(checkOf(id)).dx -
+        tester.getTopLeft(checkOf(id)).dx;
+    await tester.tap(find.text('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('scale-150')));
+    await tester.pumpAndSettle();
+    expect(h.controller.settings.uiScale, 1.5);
+    expect(h.store.settings.uiScale, 1.5);
+    await tester.tap(find.text('Gün'));
+    await tester.pumpAndSettle();
+    final after =
+        tester.getBottomRight(checkOf(id)).dx -
+        tester.getTopLeft(checkOf(id)).dx;
+    expect(after, closeTo(before * 1.5, 0.1));
+    await tester.tap(checkOf(id));
+    await tester.pumpAndSettle();
+    expect(h.controller.data.isDone(id, h.controller.today), isTrue);
+    await tester.tap(find.text('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('scale-reset')));
+    await tester.pumpAndSettle();
+    expect(h.store.settings.uiScale, 1.0);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final width in [360.0, 390.0, 600.0, 1200.0]) {
+    testWidgets('phone and zoomed layout at $width stays usable', (
+      tester,
+    ) async {
+      final originalHandler = FlutterError.onError;
+      FlutterError.onError = (details) {
+        debugPrint(details.toString());
+        originalHandler?.call(details);
+      };
+      addTearDown(() => FlutterError.onError = originalHandler);
+      final store = MemoryTaskStore()
+        ..settings = const AppSettings(uiScale: 2.0);
+      final h = await pumpApp(
+        tester,
+        store: store,
+        size: Size(width, 1000),
+        seed: (c) {
+          c.addTask(
+            title: 'Uzun görev başlığı ile telefon ekranını kontrol et',
+            rule: const DailyRule(),
+            start: c.today,
+            time: ClockTime(9, 0),
+            steps: ['Birinci adım', 'İkinci adım'],
+          );
+        },
+      );
+      final layoutError = tester.takeException();
+      expect(
+        layoutError,
+        isNull,
+        reason: layoutError is FlutterError ? layoutError.toStringDeep() : null,
+      );
+      final id = h.controller.data.tasks.single.id;
+      await tester.dragUntilVisible(
+        checkOf(id),
+        find.byType(CustomScrollView),
+        const Offset(0, -200),
+      );
+      await Scrollable.ensureVisible(
+        tester.element(checkOf(id)),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(checkOf(id));
+      await tester.pumpAndSettle();
+      expect(h.controller.data.isDone(id, h.controller.today), isTrue);
+      expect(tester.takeException(), isNull);
+      for (final tab in ['Görevler', 'Kontrol', 'Karakter', 'Ayarlar']) {
+        await tester.tap(find.text(tab).last);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: tab);
+      }
+      await tester.tap(find.text('Görevler').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('new-task-fab')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('editor-title')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('opens on today with an empty list', (tester) async {
     await pumpApp(tester);
     expect(find.text('Bugün'), findsWidgets);
@@ -507,7 +601,11 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.text('Ayarlar'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('about-open-folder')));
+    await tester.dragUntilVisible(
+      find.byKey(const Key('about-open-folder')),
+      find.byType(ListView).first,
+      const Offset(0, -300),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('about-open-folder')));
     await tester.pumpAndSettle();
@@ -718,7 +816,11 @@ void main() {
     );
     await tester.tap(find.text('Ayarlar'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('import')));
+    await tester.dragUntilVisible(
+      find.byKey(const Key('import')),
+      find.byType(ListView).first,
+      const Offset(0, -300),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('export')));
     await tester.pumpAndSettle();
