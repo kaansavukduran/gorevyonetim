@@ -10,7 +10,7 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 - [x] Tema, oyun modu, karakter sınıfı ve büyütme kalıcı. Karakter sınıfı JSON'a yazılmama hatası giderildi; hızlı ayar yazımları sıraya alındı; bozuk UTF-8 ayar dosyası güvenli varsayılanlarla açılır.
 - [x] Telefon ve büyütülmüş pencere düzenleri: görev ayrıntıları alt satıra geçer, düzenleme seçenekleri sarılır, kontrol ekranı dikey kayar, bildirimler pencereye sığar.
 - [x] Android proje ve yerel özel veri klasörü: sistem dosya seçicisiyle JSON dışa/içe aktarım; depolama izni veya yeni üçüncü taraf uygulama paketi yok. Geçersiz yedek mevcut listeye dokunmaz.
-- [ ] Windows EXE/ZIP, macOS DMG/ZIP, Linux tar.gz ve Android APK'nın bu commit için GitHub Actions'ta başarılı derlemesi ve numaralı Releases kaydı: gönderim sonrası sonucu doğrula.
+- [x] Windows EXE/ZIP, macOS DMG/ZIP, Linux tar.gz ve Android APK derlendi ve yayımlandı: [v1.1.0-build.7](https://github.com/kaansavukduran/gorevyonetimuygulamas-/releases/tag/v1.1.0-build.7). Beş masaüstü paketi + APK + SHA256SUMS olmak üzere 7 dosya doğrulandı. Kaynak commit `486b221947552623a5400e54a00e754df5f901ab`; sonraki commitler yalnız kontrol noktası belgeleri.
 - [ ] Android yerel dosya seçicisini emülatörde/cihazda uçtan uca doğrula: dosya yaz, yeniden seç, Türkçe içerik ve iptali dene. MethodChannel sınırı birim testlidir; gerçek seçici henüz elle denenmedi.
 - [ ] Android kalıcı dağıtım imzası ve güncelleme testi: şimdilik test anahtarıyla imzalı önizleme; farklı derlemeler arasında doğrudan güncelleme garantisi yok. İmzalama sırrını koda/artefakta koyma; kullanıcıya ait kalıcı anahtarın güvenli depo secrets yapılandırması gerekiyor. Bağlı GitHub entegrasyonuyla repo secrets listesi denendi: HTTP 403 `Resource not accessible by integration`. Bu izin değişmeden aynı isteği tekrar tekrar deneme; önizleme paketi bu engelden bağımsız üretilebilir.
 - [ ] Son cihaz kabul turu: Windows kurulum/yükseltme, macOS açılış, Linux açılış ve Android telefon üzerinde görev/yedek/görünüm akışlarının sonuçlarını kaydet. CI açılış kontrolünü elle cihaz kabulü gibi sunma.
@@ -22,9 +22,11 @@ Son çalışma: 9 Kasım 2026, Codex devralma turu. Tek hedef depo: `kaansavukdu
 - `flutter test`: 138 başarılı test; ölçek, gerçek ayar dosyasında hızlı yazımlar, Android kanalında yedek doğrulama ve dar ekran gezintisi dahil.
 - `flutter build web --release --no-web-resources-cdn`: başarılı (sadece geçici tarayıcı önizlemesi; web kalıcı veri desteği diye sunulmaz).
 - Chromium/Playwright ile %150 ölçeği seçme, görev ekleme, tik atma ve 390 pikselde Kontrol sekmesine geçiş doğrulandı; tarayıcı hata listesi boş.
-- Bu bulut makinesinde sudo/GTK derleyici araçları yok; yerel Linux masaüstü derlemesi yapılmadı. Gerçek platform derlemeleri GitHub'ın ilgili işletim sistemi makinelerinde ve Android emülatöründe koşacak.
+- Bu bulut makinesinde sudo/GTK derleyici araçları yok; yerel Linux masaüstü derlemesi yapılmadı. Gerçek platform derlemeleri GitHub makinelerinde geçti: [başarılı Actions turu](https://github.com/kaansavukduran/gorevyonetimuygulamas-/actions/runs/42596703830). Windows açılış, macOS açılış, Linux gerçek dosya yeniden açılışı/fare-klavye testi ve Android emülatöründeki 2 entegrasyon testi başarılı.
 - Üç mutasyon denendi ve testler üçünü de yakaladı: karakter sınıfını kayıttan çıkarmak, büyütmeyi yok saymak, hızlı ayarları eşzamanlı yazmak. Değişiklikler geri alındı.
 - İlk GitHub Android işi SDK kurulum eyleminin artık bulunmayan `tools` paketini istemesi yüzünden durdu. Paket listesi yalnız `platform-tools` olacak şekilde düzeltildi; eski başarılı masaüstü sürümlerine dokunulmadı.
+
+Android önizleme APK arşivi ayrıca indirildi: manifest ve ARM64, ARMv7, x86_64 için derlenmiş Flutter/Dart kitaplıkları mevcut. `son-surum` önceki sürümü ve indirmeleri korunuyor.
 
 ## Yayın kuralları
 
@@ -34,6 +36,6 @@ Linux integration işi yalnız `file_roundtrip_test.dart` çalıştırmalı; And
 
 ## Tam sonraki adım
 
-Gönderilen commit'in Actions işlerini izle. Hata varsa ilgili logdan düzelt, testleri tekrar çalıştır. Başarıda Releases varlıklarının beş masaüstü paketi + Android APK + SHA256SUMS içerdiğini ve aynı commit'e işaret ettiğini doğrula. Sonra Android sistem dosya seçicisi kabul turunu ve kalıcı APK imzasını ele al. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.
+Yayın ve dört platformun derlemesi tamamlandı. Şimdi Android sistem dosya seçicisini gerçek emülatör UI akışıyla doğrula (JSON oluşturma, geri seçme, Türkçe içerik, iptal, bozuk yedeği reddetme). Gizli Android dosya yolunu/masaüstü klasör düğmesini telefon arayüzünden sadeleştir. Kalıcı APK imzası için yukarıdaki gerçek secrets izin engelini koru; imza sorununu çözülmüş sayma. Her saat güncel ana dal ve bu dosyadan devam et; önceki turu baştan yeniden yapma. Başka aktif tur varsa çakışma.
 
 Tamamlanma: yukarıdaki açık kabul maddeleri gerçek kanıtla kapanınca saatlik otomasyonu durdur. Somut kullanıcı ayarı gerektiren engeli açıkça kaydet; tamamlandı sayma.
