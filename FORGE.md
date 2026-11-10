@@ -4,7 +4,7 @@ Son çalışma: 9 Kasım 2026, 1.2.1 Android yedekleme güvenilirliği turu. Tek
 
 ## Çalışma durumu
 
-9 Kasım 2026 15.40 Europe/Istanbul: kullanıcının Aion, Baykuş Ömer, koyun ve kurt karakterlerini ekleme, Türkçe/İngilizce karakter akışı ve Drive yedeği üzerinde canlı çalışma var. Kilit 9 Kasım 2026 18.00 Europe/Istanbul’a kadar geçerli. Başka tur kaynak kodunu değiştirmeden sonraki tura bırakmalı. Bu tur tamamlanınca kilit kaldırılır.
+11 Kasım 2026: Claude (Claude Code) turu "1.3.0 dil ve erişilebilirlik" canlı çalışıyor: Türkçe/İngilizce arayüz ve dil seçimi, yazı tipi seçimi (disleksi dostu dahil), arayüz ölçeğinden bağımsız yazı boyutu, yüksek kontrast, Ayarlar kategorileri, Güncellemeler bölümü. Kilit 12 Kasım 2026 03.00 Europe/Istanbul'a kadar geçerli; başka tur kaynak koda dokunmasın. Codex'in 9 Kasım kilidi süresi dolmuş, kod gönderilmemişti; Aion ve diğer karakterler Drive referansları gerektirdiği için bu turda yok, sonraki tura bırakılır.
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
 
