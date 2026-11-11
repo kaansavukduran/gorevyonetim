@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../domain/game.dart';
 import '../domain/local_date.dart';
@@ -138,7 +140,10 @@ class HeroStrip extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'Seviye ${profile.level} · ${profile.title}',
+                            context.t('Seviye {p0} · {p1}', {
+                              'p0': profile.level,
+                              'p1': context.t(profile.title),
+                            }),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
@@ -171,7 +176,7 @@ class HeroStrip extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  Text('bugün', style: theme.textTheme.labelSmall),
+                  Text(context.t('bugün'), style: theme.textTheme.labelSmall),
                 ],
               ),
             ],
@@ -231,8 +236,8 @@ T withGameFeedback<T>(
         content: Text(
           [
             '+$gained XP',
-            if (perfect) 'Mükemmel gün! +1 İrade',
-            if (goalReached) 'Günlük hedef tamam!',
+            if (perfect) context.t('Mükemmel gün! +1 İrade'),
+            if (goalReached) context.t('Günlük hedef tamam!'),
             if (opened.isNotEmpty) 'Yeni rozet: ${opened.join(', ')}',
           ].join('   ·   '),
         ),
@@ -259,36 +264,37 @@ class LevelUpDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final style = GameStyle.of(context);
     return AlertDialog(
-      key: const Key('level-up'),
-      contentPadding: const EdgeInsets.fromLTRB(28, 28, 28, 8),
+      key: Key('level-up'),
+      contentPadding: EdgeInsets.fromLTRB(28, 28, 28, 8),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.4, end: 1),
-            duration: animate
-                ? const Duration(milliseconds: 600)
-                : Duration.zero,
+            duration: animate ? Duration(milliseconds: 600) : Duration.zero,
             curve: Curves.elasticOut,
             builder: (_, v, child) => Transform.scale(scale: v, child: child),
             child: LevelBadge(level: profile.level, size: 96),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Text(
-            'Seviye atladın!',
+            context.t('Seviye atladın!'),
             style: theme.textTheme.headlineSmall?.copyWith(
               color: style.xp,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
-            'Seviye ${profile.level}: ${profile.title}',
+            context.t('Seviye {p0}: {p1}', {
+              'p0': profile.level,
+              'p1': context.t(profile.title),
+            }),
             style: theme.textTheme.titleMedium,
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
-            'Sonraki seviye için ${profile.xpForNext} XP',
+            context.t('Sonraki seviye için {p0} XP', {'p0': profile.xpForNext}),
             style: theme.textTheme.bodySmall,
           ),
         ],
@@ -296,7 +302,7 @@ class LevelUpDialog extends StatelessWidget {
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Devam'),
+          child: Text(context.t('Devam')),
         ),
       ],
     );
@@ -389,7 +395,7 @@ class QuestCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Görevler tahtası',
+                    context.t('Görevler tahtası'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelLarge?.copyWith(
@@ -401,7 +407,7 @@ class QuestCard extends StatelessWidget {
                 Icon(Icons.savings, size: 18, color: style.xp),
                 const SizedBox(width: 4),
                 Text(
-                  '${book.gold} Altın',
+                  context.t('{p0} Altın', {'p0': book.gold}),
                   key: const Key('gold'),
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: style.xp,
@@ -413,7 +419,7 @@ class QuestCard extends StatelessWidget {
             const SizedBox(height: 8),
             line(
               Icons.flag,
-              'Günlük: ${q.kind.title}',
+              context.t('Günlük: {p0}', {'p0': context.t(q.kind.title)}),
               q.progress,
               q.goal,
               q.done,
@@ -423,7 +429,9 @@ class QuestCard extends StatelessWidget {
             const SizedBox(height: 6),
             line(
               Icons.castle,
-              'Haftalık: ${WeekChallenge.title}',
+              context.t('Haftalık: {p0}', {
+                'p0': context.t(WeekChallenge.title),
+              }),
               w.progress,
               WeekChallenge.goal,
               w.done,
@@ -482,8 +490,11 @@ class ActivityHeatmap extends StatelessWidget {
                             )!;
                       return Tooltip(
                         message: r == null
-                            ? '${d.toIso()}: görev yok'
-                            : '${d.toIso()}: %${(r * 100).round()} yapıldı',
+                            ? context.t('{p0}: görev yok', {'p0': d.toIso()})
+                            : context.t('{p0}: %{p1} yapıldı', {
+                                'p0': d.toIso(),
+                                'p1': (r * 100).round(),
+                              }),
                         child: Container(
                           width: 14,
                           height: 14,
@@ -549,8 +560,14 @@ class DailyGoalProgress extends StatelessWidget {
             Expanded(
               child: Text(
                 completed
-                    ? 'Günlük hedef tamam! $done / $goal'
-                    : 'Günlük hedef: $done / $goal',
+                    ? context.t('Günlük hedef tamam! {p0} / {p1}', {
+                        'p0': done,
+                        'p1': goal,
+                      })
+                    : context.t('Günlük hedef: {p0} / {p1}', {
+                        'p0': done,
+                        'p1': goal,
+                      }),
                 key: const Key('daily-goal-label'),
                 style: Theme.of(context).textTheme.labelLarge,
               ),

@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import 'l10n.dart';
+
 import 'package:flutter/services.dart';
 
 import '../app/task_controller.dart';
@@ -74,7 +77,7 @@ class _HomeShellState extends State<HomeShell> {
           'Hatırlatma: ${due.map((t) => '${t.time!.format()} ${t.title}').join(', ')}',
         ),
         action: SnackBarAction(
-          label: 'Güne git',
+          label: context.t('Güne git'),
           onPressed: () => _setDay(controller.today),
         ),
       ),
@@ -114,12 +117,32 @@ class _HomeShellState extends State<HomeShell> {
 
   /// Tabs in order; Karakter only in game mode.
   List<_Tab> _tabs() => [
-    const _Tab('gun', Icons.today_outlined, Icons.today, 'Gün'),
-    const _Tab('gorevler', Icons.list_alt_outlined, Icons.list_alt, 'Görevler'),
-    const _Tab('kontrol', Icons.grid_view_outlined, Icons.grid_view, 'Kontrol'),
+    _Tab('gun', Icons.today_outlined, Icons.today, context.t('Gün')),
+    _Tab(
+      'gorevler',
+      Icons.list_alt_outlined,
+      Icons.list_alt,
+      context.t('Görevler'),
+    ),
+    _Tab(
+      'kontrol',
+      Icons.grid_view_outlined,
+      Icons.grid_view,
+      context.t('Kontrol'),
+    ),
     if (controller.settings.gameMode)
-      const _Tab('karakter', Icons.person_outline, Icons.person, 'Karakter'),
-    const _Tab('ayarlar', Icons.settings_outlined, Icons.settings, 'Ayarlar'),
+      _Tab(
+        'karakter',
+        Icons.person_outline,
+        Icons.person,
+        context.t('Karakter'),
+      ),
+    _Tab(
+      'ayarlar',
+      Icons.settings_outlined,
+      Icons.settings,
+      context.t('Ayarlar'),
+    ),
   ];
 
   void _go(String id) {
@@ -148,15 +171,23 @@ class _HomeShellState extends State<HomeShell> {
     final body = Column(
       children: [
         if (!controller.store.persistent)
-          const _Banner(
+          _Banner(
             icon: Icons.info_outline_rounded,
-            text: 'Tarayıcı önizlemesi: görevler kaydedilmez. Uygulama masaüstü için yapıldı (Windows, macOS, Linux).',
+            text: context.t(
+              context.t(
+                'Tarayıcı önizlemesi: görevler kaydedilmez. Uygulama masaüstü için yapıldı (Windows, macOS, Linux).',
+              ),
+            ),
           ),
         if (controller.saveError != null)
           _Banner(
             icon: Icons.error_outline_rounded,
-            text:
-                '${controller.saveError}\nDeğişiklik ekranda duruyor; bir sonraki değişiklikte yeniden denenecek.',
+            text: context.t(
+              context.t(
+                '{p0}\nDeğişiklik ekranda duruyor; bir sonraki değişiklikte yeniden denenecek.',
+              ),
+              {'p0': controller.saveError},
+            ),
             error: true,
           ),
         Expanded(child: page),
@@ -164,15 +195,15 @@ class _HomeShellState extends State<HomeShell> {
     );
 
     final scaffold = Scaffold(
-      appBar: AppBar(title: const Text('Günlük Görevler')),
+      appBar: AppBar(title: Text(context.t('Günlük Görevler'))),
       floatingActionButton: current != 'gorevler'
           ? null
           : FloatingActionButton.extended(
               key: const Key('new-task-fab'),
-              tooltip: 'Yeni görev (Ctrl + N)',
+              tooltip: context.t('Yeni görev (Ctrl + N)'),
               onPressed: _newTask,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Yeni görev'),
+              label: Text(context.t('Yeni görev')),
             ),
       bottomNavigationBar: wide
           ? null
@@ -298,7 +329,7 @@ class _UnreadablePage extends StatelessWidget {
     final theme = Theme.of(context);
     final store = controller.store;
     return Scaffold(
-      appBar: AppBar(title: const Text('Günlük Görevler')),
+      appBar: AppBar(title: Text(context.t('Günlük Görevler'))),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
@@ -315,7 +346,7 @@ class _UnreadablePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Kayıtlı görevler açılamadı',
+                  context.t('Kayıtlı görevler açılamadı'),
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
@@ -324,24 +355,26 @@ class _UnreadablePage extends StatelessWidget {
                   key: const Key('unreadable-message'),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Dosya:',
+                Text(
+                  context.t('Dosya:'),
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 SelectableText(store.location),
                 if (store.backupLocation != null) ...[
                   const SizedBox(height: 8),
-                  const Text(
-                    'Günlük yedekler:',
+                  Text(
+                    context.t('Günlük yedekler:'),
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   SelectableText(store.backupLocation!),
                 ],
                 const SizedBox(height: 12),
-                const Text(
-                  'Dosyaya dokunulmadı ve üzerine yazılmadı. Bir yedeği bu dosyanın '
-                  'yerine kopyalayıp uygulamayı yeniden açabilir ya da dosyayı kenara '
-                  'alıp boş bir listeyle başlayabilirsin.',
+                Text(
+                  context.t(
+                    context.t(
+                      'Dosyaya dokunulmadı ve üzerine yazılmadı. Bir yedeği bu dosyanın yerine kopyalayıp uygulamayı yeniden açabilir ya da dosyayı kenara alıp boş bir listeyle başlayabilirsin.',
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 FilledButton.tonal(
@@ -351,10 +384,14 @@ class _UnreadablePage extends StatelessWidget {
                     if (!context.mounted) return;
                     showUndoSnack(
                       context,
-                      'Eski dosya şuraya taşındı: $movedTo',
+                      context.t('Eski dosya şuraya taşındı: {p0}', {
+                        'p0': movedTo,
+                      }),
                     );
                   },
-                  child: const Text('Dosyayı kenara al ve boş liste başlat'),
+                  child: Text(
+                    context.t('Dosyayı kenara al ve boş liste başlat'),
+                  ),
                 ),
               ],
             ),

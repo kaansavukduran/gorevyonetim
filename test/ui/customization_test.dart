@@ -29,6 +29,8 @@ void main() {
     await tester.pump();
     expect(find.text('Örnek yazı · %137'), findsOneWidget);
     expect(h.controller.settings.uiScale, 1.0);
+    await tester.ensureVisible(find.byKey(const Key('scale-apply')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('scale-apply')));
     await tester.pumpAndSettle();
     expect(h.store.settings.uiScale, 1.37);

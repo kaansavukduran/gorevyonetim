@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../app/theme_customization.dart';
 import 'color_picker.dart';
@@ -24,35 +26,40 @@ class ThemeCustomizationCard extends StatelessWidget {
         <(String, String, Color, ThemeCustomization Function(int))>[
           (
             'primary',
-            'Ana vurgu',
+            context.t('Ana vurgu'),
             palette.primary,
             (v) => custom.copyWith(primary: v),
           ),
           (
             'secondary',
-            'İkinci vurgu',
+            context.t('İkinci vurgu'),
             palette.secondary,
             (v) => custom.copyWith(secondary: v),
           ),
           (
             'background-start',
-            'Arka plan başlangıcı',
+            context.t('Arka plan başlangıcı'),
             palette.gradient.first,
             (v) => custom.copyWith(backgroundStart: v),
           ),
           (
             'background-end',
-            'Arka plan bitişi',
+            context.t('Arka plan bitişi'),
             palette.gradient.last,
             (v) => custom.copyWith(backgroundEnd: v),
           ),
           (
             'surface',
-            'Kart zemini',
+            context.t('Kart zemini'),
             palette.surface,
             (v) => custom.copyWith(surface: v),
           ),
-          ('xp', 'İlerleme ve XP', palette.xp, (v) => custom.copyWith(xp: v)),
+          (
+            'xp',
+            context.t('İlerleme ve XP'),
+            palette.xp,
+            (v) => custom.copyWith(xp: v),
+          ),
         ];
     return Card(
       key: const Key('theme-customization'),
@@ -64,9 +71,13 @@ class ThemeCustomizationCard extends StatelessWidget {
             SwitchListTile(
               key: const Key('custom-theme-enabled'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Özel görünüm'),
-              subtitle: const Text(
-                'Renkleri, kartları ve başlıkları kendine göre ayarla. Renk veya biçim seçtiğinde özel görünüm açılır.',
+              title: Text(context.t('Özel görünüm')),
+              subtitle: Text(
+                context.t(
+                  context.t(
+                    'Renkleri, kartları ve başlıkları kendine göre ayarla. Renk veya biçim seçtiğinde özel görünüm açılır.',
+                  ),
+                ),
               ),
               value: custom.enabled,
               onChanged: (v) => _save(custom.copyWith(enabled: v)),
@@ -134,16 +145,16 @@ class ThemeCustomizationCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            const Text('Görünüm'),
+            Text(context.t('Görünüm')),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 for (final option in [
-                  ('preset', 'Temadan'),
-                  ('light', 'Açık'),
-                  ('dark', 'Koyu'),
+                  ('preset', context.t('Temadan')),
+                  ('light', context.t('Açık')),
+                  ('dark', context.t('Koyu')),
                 ])
                   ChoiceChip(
                     key: Key('custom-appearance-${option.$1}'),
@@ -156,11 +167,15 @@ class ThemeCustomizationCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Text('Kart köşeleri: ${palette.radius.round()} px'),
+            Text(
+              context.t('Kart köşeleri: {p0} px', {
+                'p0': palette.radius.round(),
+              }),
+            ),
             const SizedBox(height: 8),
             FineSlider(
               id: 'theme-radius',
-              label: 'Köşe',
+              label: context.t('Köşe'),
               value: palette.radius.round(),
               min: 0,
               max: 28,
@@ -171,16 +186,16 @@ class ThemeCustomizationCard extends StatelessWidget {
             SwitchListTile(
               key: const Key('custom-glow'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Rozet parlaması'),
+              title: Text(context.t('Rozet parlaması')),
               value: palette.glow,
               onChanged: (v) => _save(custom.copyWith(enabled: true, glow: v)),
             ),
             SwitchListTile(
               key: const Key('custom-serif'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Klasik başlık yazısı'),
-              subtitle: const Text(
-                'Kapalıyken modern, sade başlıklar kullanılır.',
+              title: Text(context.t('Klasik başlık yazısı')),
+              subtitle: Text(
+                context.t('Kapalıyken modern, sade başlıklar kullanılır.'),
               ),
               value: palette.serifTitles,
               onChanged: (v) =>
@@ -189,7 +204,7 @@ class ThemeCustomizationCard extends StatelessWidget {
             TextButton.icon(
               key: const Key('custom-theme-reset'),
               icon: const Icon(Icons.restart_alt),
-              label: const Text('Hazır temaya dön'),
+              label: Text(context.t('Hazır temaya dön')),
               onPressed: () => _save(const ThemeCustomization()),
             ),
           ],
@@ -221,7 +236,7 @@ class _ThemePreview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Görünüm önizlemesi',
+                  context.t('Görünüm önizlemesi'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 10),
@@ -231,7 +246,7 @@ class _ThemePreview extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Örnek görev',
+                        context.t('Örnek görev'),
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ),
@@ -242,7 +257,7 @@ class _ThemePreview extends StatelessWidget {
                 LinearProgressIndicator(value: 0.65, color: spec.xp),
                 const SizedBox(height: 8),
                 Text(
-                  '65 / 100 XP · yeni seviyeye doğru',
+                  context.t('65 / 100 XP · yeni seviyeye doğru'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

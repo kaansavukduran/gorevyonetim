@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../domain/local_date.dart';
 import '../domain/task.dart';
@@ -57,20 +59,20 @@ class _HistoryPageState extends State<HistoryPage> {
     return ListView(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
           child: Wrap(
             spacing: 12,
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('Kontrol', style: theme.textTheme.headlineSmall),
+              Text(context.t('Kontrol'), style: theme.textTheme.headlineSmall),
               SegmentedButton<int>(
-                key: const Key('history-span'),
+                key: Key('history-span'),
                 showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: 7, label: Text('7 gün')),
-                  ButtonSegment(value: 14, label: Text('14 gün')),
-                  ButtonSegment(value: 30, label: Text('30 gün')),
+                segments: [
+                  ButtonSegment(value: 7, label: Text(context.t('7 gün'))),
+                  ButtonSegment(value: 14, label: Text(context.t('14 gün'))),
+                  ButtonSegment(value: 30, label: Text(context.t('30 gün'))),
                 ],
                 selected: {_span},
                 onSelectionChanged: (s) => setState(() {
@@ -80,14 +82,16 @@ class _HistoryPageState extends State<HistoryPage> {
               ),
               IconButton(
                 key: const Key('history-back'),
-                tooltip: 'Daha eski',
+                tooltip: context.t('Daha eski'),
                 icon: const Icon(Icons.chevron_left_rounded),
                 onPressed: () => setState(() => _back++),
               ),
-              Text('${shortDate(start)} – ${shortDate(end)} ${end.year}'),
+              Text(
+                '${shortDate(start, en: context.isEnglish)} – ${shortDate(end, en: context.isEnglish)} ${end.year}',
+              ),
               IconButton(
                 key: const Key('history-forward'),
-                tooltip: 'Daha yeni',
+                tooltip: context.t('Daha yeni'),
                 icon: const Icon(Icons.chevron_right_rounded),
                 onPressed: _back == 0 ? null : () => setState(() => _back--),
               ),
@@ -98,9 +102,8 @@ class _HistoryPageState extends State<HistoryPage> {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: Text(
             tasks.isEmpty
-                ? 'Bu aralıkta görev yok.'
-                : 'Bu aralıkta $done kez yapıldı, $missed kez yapılmadı'
-                      '${pending > 0 ? ', bugün $pending görev bekliyor' : ''}.',
+                ? context.t('Bu aralıkta görev yok.')
+                : 'Bu aralıkta $done kez yapıldı, $missed kez yapılmadı${pending > 0 ? ', bugün $pending görev bekliyor' : ''}.',
             key: const Key('history-summary'),
             style: theme.textTheme.titleMedium,
           ),
@@ -143,7 +146,7 @@ class _HistoryPageState extends State<HistoryPage> {
             child: Column(
               children: [
                 Text(
-                  weekdayShort[d.weekday - 1],
+                  weekdayAbbr(d.weekday, en: context.isEnglish),
                   style: small?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -161,7 +164,11 @@ class _HistoryPageState extends State<HistoryPage> {
         const SizedBox(width: _gap),
         SizedBox(
           width: _sumWidth,
-          child: Text('Yapıldı', style: small, textAlign: TextAlign.end),
+          child: Text(
+            context.t('Yapıldı'),
+            style: small,
+            textAlign: TextAlign.end,
+          ),
         ),
       ],
     );
@@ -205,7 +212,7 @@ class _HistoryPageState extends State<HistoryPage> {
             child: Text(
               stats.settled == 0
                   ? '–'
-                  : '${stats.done}/${stats.settled}  %${(100 * stats.done / stats.settled).round()}',
+                  : '${stats.done}/${stats.settled}  ${context.percent((100 * stats.done / stats.settled).round())}',
               key: Key('history-sum-${task.id}'),
               textAlign: TextAlign.end,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -223,9 +230,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final status = data.statusOf(task, d, today);
     final at = data.doneAt(task.id, d);
     final label =
-        '${task.title} · ${shortDate(d)} ${weekdayName(d)}: '
-        '${StatusStyle.of(status, scheme).label}'
-        '${at != null ? ' (${clockTime(at)})' : ''}';
+        '${task.title} · ${shortDate(d, en: context.isEnglish)} ${weekdayName(d, en: context.isEnglish)}: ${context.t(StatusStyle.of(status, scheme).label)}${at != null ? ' (${clockTime(at)})' : ''}';
     final canToggle =
         !d.isAfter(today) && status != DayStatus.notScheduled ||
         status == DayStatus.done;
@@ -264,7 +269,7 @@ class _HistoryPageState extends State<HistoryPage> {
       children: [
         SizedBox(
           width: _nameWidth,
-          child: Text('Gün toplamı', style: small),
+          child: Text(context.t('Gün toplamı'), style: small),
         ),
         for (final d in days)
           Builder(
@@ -309,7 +314,7 @@ class _Legend extends StatelessWidget {
               StatusCell(status: s, size: 18),
               const SizedBox(width: 6),
               Text(
-                StatusStyle.of(s, scheme).label,
+                context.t(StatusStyle.of(s, scheme).label),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],

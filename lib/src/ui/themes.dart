@@ -196,7 +196,42 @@ Color contrastingText(Color background) {
   return blackContrast >= whiteContrast ? Colors.black : Colors.white;
 }
 
-ThemeData buildTheme(AppThemeSpec spec) {
+/// Bundled font family for a font choice (null = the system font).
+String? fontFamilyFor(String choice) => switch (choice) {
+  'atkinson' => 'AtkinsonHyperlegibleNext',
+  'lexend' => 'Lexend',
+  'dyslexic' => 'OpenDyslexic',
+  _ => null,
+};
+
+/// [spec] with strong contrast: pure background, full-strength text and
+/// borders, and an accent that stands out on it.
+AppThemeSpec highContrastOf(AppThemeSpec spec) {
+  final dark = spec.brightness == Brightness.dark;
+  final bg = dark ? Colors.black : Colors.white;
+  final accent = dark ? const Color(0xFFFFE066) : const Color(0xFF0031B3);
+  return AppThemeSpec(
+    id: spec.id,
+    name: spec.name,
+    tagline: spec.tagline,
+    brightness: spec.brightness,
+    primary: accent,
+    secondary: dark ? const Color(0xFF7DF9FF) : const Color(0xFF8A0057),
+    surface: bg,
+    gradient: [bg, bg],
+    xp: accent,
+    emblem: spec.emblem,
+    serifTitles: spec.serifTitles,
+    radius: spec.radius,
+  );
+}
+
+ThemeData buildTheme(
+  AppThemeSpec spec, {
+  String? fontFamily,
+  bool highContrast = false,
+}) {
+  if (highContrast) spec = highContrastOf(spec);
   final base = ColorScheme.fromSeed(
     seedColor: spec.primary,
     brightness: spec.brightness,
@@ -209,31 +244,42 @@ ThemeData buildTheme(AppThemeSpec spec) {
     onSecondary: contrastingText(spec.secondary),
     surface: spec.surface,
     onSurface: contrastingText(spec.surface),
-    onSurfaceVariant: Color.lerp(
-      contrastingText(spec.surface),
-      spec.surface,
-      0.25,
-    ),
+    onSurfaceVariant: highContrast
+        ? contrastingText(spec.surface)
+        : Color.lerp(contrastingText(spec.surface), spec.surface, 0.25),
+    outline: highContrast ? contrastingText(spec.surface) : null,
+    outlineVariant: highContrast ? contrastingText(spec.surface) : null,
     surfaceContainerLow: Color.alphaBlend(
       spec.primary.withValues(alpha: dark ? 0.06 : 0.04),
       spec.surface,
     ),
   );
-  final border = spec.primary.withValues(alpha: dark ? 0.35 : 0.25);
-  final titles = spec.serifTitles ? 'Georgia' : null;
+  final border = highContrast
+      ? contrastingText(spec.surface)
+      : spec.primary.withValues(alpha: dark ? 0.35 : 0.25);
+  // A chosen reading font is used everywhere, titles included.
+  final titles = fontFamily ?? (spec.serifTitles ? 'Georgia' : null);
   const serifFallback = [
     'Georgia',
     'Cambria',
     'DejaVu Serif',
     'Times New Roman',
   ];
-  final text = ThemeData(colorScheme: scheme).textTheme
-      .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
+  final text = ThemeData(colorScheme: scheme, fontFamily: fontFamily).textTheme
+      .apply(
+        bodyColor: scheme.onSurface,
+        displayColor: scheme.onSurface,
+        fontFamily: fontFamily,
+      );
   TextStyle? t(TextStyle? s) => titles == null
       ? s
-      : s?.copyWith(fontFamily: titles, fontFamilyFallback: serifFallback);
+      : s?.copyWith(
+          fontFamily: titles,
+          fontFamilyFallback: fontFamily == null ? serifFallback : null,
+        );
   return ThemeData(
     colorScheme: scheme,
+    fontFamily: fontFamily,
     useMaterial3: true,
     scaffoldBackgroundColor: Colors.transparent,
     textTheme: text.copyWith(

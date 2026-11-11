@@ -1,6 +1,6 @@
 # CLAUDE.md: Günlük Görevler
 
-Herkesin kullanabileceği, çevrimdışı günlük görev uygulaması (Flutter; Windows, macOS, Linux, Android). Arayüz Türkçe. Ayrıntılar `README.md`.
+Herkesin kullanabileceği, çevrimdışı günlük görev uygulaması (Flutter; Windows, macOS, Linux, Android). Arayüz Türkçe ve İngilizce: metinler kodda Türkçe yazılır, `context.t('…')` ile sarılır ve İngilizcesi tek tabloda (`lib/src/ui/l10n_en.dart`) durur; `test/ui/l10n_test.dart` sarılmış her metnin İngilizcesini ve yer tutucularını denetler. Yeni metni sarmadan ekleme. Ayrıntılar `README.md`.
 
 Uygulama genel kalır: koda kimseye özel görev, isim, rutin ya da varsayılan veri gömülmez; ilk açılışta liste boştur.
 
@@ -13,7 +13,7 @@ xvfb-run -a flutter test integration_test/file_roundtrip_test.dart -d linux     
 flutter build linux --release && xvfb-run -a -s "-screen 0 1180x800x24" tool/linux_smoke.sh /tmp/smoke
 ```
 
-Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler dört platformda da koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz ve Android önizleme APK numaralı `v1.2.1-build.N` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
+Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.github/workflows/release.yml` (testler dört platformda da koşar; Windows kurulumu ve ZIP, macOS DMG ve ZIP, Linux tar.gz ve Android önizleme APK numaralı `v<APP_VERSION>-build.N` ön sürümüne konur). Burada derlenmiş gibi gösterme. Linux paketi: `tool/package_linux.sh`.
 
 ## Kurallar (bozma)
 
@@ -28,3 +28,5 @@ Windows ve macOS sürümleri yalnızca kendi işletim sistemlerinde derlenir: `.
 Devam kontrol noktası: `FORGE.md`. Android özel dosya klasörü ve sistem dosya seçicisi yerel MethodChannel ile sağlanır; üçüncü taraf çalışma zamanı paketi eklenmedi. Arayüz ölçeği `InterfaceScale` ile uygulanır; işletim sisteminin metin büyütmesi korunur.
 
 Kullanıcının ayrıntılı ürün yönü `FORGE_PROMPT.md` içinde. Gün ekranı manuel sıralama ve saat sırasını ayırır; sürükleme manuel sıraya geçirir ve gizli görevlerin yerlerini korur. Günlük hedef yalnız gerçek tik sayısını gösterir, XP kuralını değiştirmez. Renk/ölçek/hedef ayarları için XP verme. Renk seçicinin iptalinde hiçbir ayar yazılmaz.
+
+Erişilebilirlik: yazı tipi (sistem, Atkinson Hyperlegible Next, Lexend, disleksi dostu OpenDyslexic; hepsi OFL, `assets/fonts`, Türkçe harfleri tam), arayüz ölçeğinden bağımsız yazı boyutu ve yüksek kontrast ayrı ayrı kaydedilir. Testler `test/flutter_test_config.dart` ile Türkçe cihaz varsayar.

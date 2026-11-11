@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import 'fine_slider.dart';
 
@@ -26,18 +28,22 @@ class _ScaleSettingsCardState extends State<ScaleSettingsCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Arayüz ölçeği: %$percent',
+              context.t('Arayüz ölçeği: %{p0}', {'p0': percent}),
               key: const Key('scale-label'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Çubuğu sürükle veya yüzdeyi yaz. Örnek anında değişir; çubuğu bıraktığında tüm arayüze uygulanır. Dar ekranlarda büyütme ekrana göre sınırlandırılır.',
+            Text(
+              context.t(
+                context.t(
+                  'Çubuğu sürükle veya yüzdeyi yaz. Örnek anında değişir; çubuğu bıraktığında tüm arayüze uygulanır. Dar ekranlarda büyütme ekrana göre sınırlandırılır.',
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             FineSlider(
               id: 'scale',
-              label: 'Ölçek',
+              label: context.t('Ölçek'),
               value: percent,
               min: 80,
               max: 200,
@@ -67,7 +73,7 @@ class _ScaleSettingsCardState extends State<ScaleSettingsCard> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Örnek yazı · %$preview',
+                      context.t('Örnek yazı · %{p0}', {'p0': preview}),
                       style: TextStyle(fontSize: 14 * preview / percent),
                     ),
                   ),
@@ -81,7 +87,7 @@ class _ScaleSettingsCardState extends State<ScaleSettingsCard> {
                 for (final scale in [0.8, 1.0, 1.25, 1.5, 1.75, 2.0])
                   ChoiceChip(
                     key: Key('scale-${(scale * 100).round()}'),
-                    label: Text('%${(scale * 100).round()}'),
+                    label: Text(context.percent((scale * 100).round())),
                     selected: settings.safeScale == scale,
                     onSelected: (_) {
                       setState(() => _preview = null);
@@ -102,7 +108,7 @@ class _ScaleSettingsCardState extends State<ScaleSettingsCard> {
                 );
               },
               icon: const Icon(Icons.restart_alt),
-              label: const Text('Varsayılan boyuta dön'),
+              label: Text(context.t('Varsayılan boyuta dön')),
             ),
           ],
         ),

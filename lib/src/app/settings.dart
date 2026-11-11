@@ -13,6 +13,10 @@ class AppSettings {
     this.customTheme = const ThemeCustomization(),
     this.dailyGoal = 3,
     this.celebrationEffects = true,
+    this.language = 'system',
+    this.fontChoice = 'system',
+    this.textScale = 1.0,
+    this.highContrast = false,
   });
 
   /// One of the ids in `appThemes` (unknown ids fall back to the default).
@@ -31,6 +35,23 @@ class AppSettings {
   final int dailyGoal;
   final bool celebrationEffects;
 
+  /// 'system' (device language if supported, else Turkish), 'tr' or 'en'.
+  final String language;
+
+  /// 'system', 'atkinson', 'lexend' or 'dyslexic' (OpenDyslexic).
+  final String fontChoice;
+
+  /// Text size only, independent of [uiScale] and of the OS text size.
+  final double textScale;
+
+  /// Strong contrast colours on top of any theme.
+  final bool highContrast;
+
+  static const fontChoices = ['system', 'atkinson', 'lexend', 'dyslexic'];
+
+  double get safeTextScale =>
+      textScale.isFinite ? textScale.clamp(minScale, maxScale) : 1.0;
+
   static const minScale = 0.8;
   static const maxScale = 2.0;
 
@@ -46,6 +67,10 @@ class AppSettings {
     ThemeCustomization? customTheme,
     int? dailyGoal,
     bool? celebrationEffects,
+    String? language,
+    String? fontChoice,
+    double? textScale,
+    bool? highContrast,
   }) => AppSettings(
     themeId: themeId ?? this.themeId,
     gameMode: gameMode ?? this.gameMode,
@@ -55,6 +80,10 @@ class AppSettings {
     customTheme: customTheme ?? this.customTheme,
     dailyGoal: (dailyGoal ?? this.dailyGoal).clamp(1, 20),
     celebrationEffects: celebrationEffects ?? this.celebrationEffects,
+    language: language ?? this.language,
+    fontChoice: fontChoice ?? this.fontChoice,
+    textScale: textScale ?? this.textScale,
+    highContrast: highContrast ?? this.highContrast,
   );
 
   String encode() => const JsonEncoder.withIndent('  ').convert({
@@ -66,6 +95,10 @@ class AppSettings {
     'custom_theme': customTheme.toJson(),
     'daily_goal': dailyGoal.clamp(1, 20),
     'celebration_effects': celebrationEffects,
+    'language': language,
+    'font': fontChoice,
+    'text_scale': safeTextScale,
+    'high_contrast': highContrast,
   });
 
   /// Reads settings; anything missing or malformed falls back to defaults
@@ -91,6 +124,18 @@ class AppSettings {
         celebrationEffects: j['celebration_effects'] is bool
             ? j['celebration_effects']! as bool
             : true,
+        language: const ['system', 'tr', 'en'].contains(j['language'])
+            ? j['language']! as String
+            : 'system',
+        fontChoice: fontChoices.contains(j['font'])
+            ? j['font']! as String
+            : 'system',
+        textScale: j['text_scale'] is num && (j['text_scale']! as num).isFinite
+            ? (j['text_scale']! as num).toDouble().clamp(minScale, maxScale)
+            : 1.0,
+        highContrast: j['high_contrast'] is bool
+            ? j['high_contrast']! as bool
+            : false,
       );
     } on FormatException {
       return const AppSettings();

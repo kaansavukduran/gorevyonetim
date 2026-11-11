@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../domain/game.dart';
 import '../domain/task.dart';
@@ -22,40 +24,47 @@ class CharacterPage extends StatelessWidget {
     final stats = <(IconData, String, String, String)>[
       (
         Icons.local_fire_department,
-        'İrade',
+        context.t('İrade'),
         '${p.willpower}',
-        'Tüm görevlerini bitirdiğin gün sayısı (mükemmel gün)',
+        context.t('Tüm görevlerini bitirdiğin gün sayısı (mükemmel gün)'),
       ),
       (
         Icons.military_tech,
-        'Disiplin',
-        p.discipline == null ? '–' : '%${p.discipline}',
-        'Son 30 günde beklenen günlerin yüzde kaçında yaptın',
+        context.t('Disiplin'),
+        p.discipline == null ? '–' : context.percent(p.discipline!),
+        context.t('Son 30 günde beklenen günlerin yüzde kaçında yaptın'),
       ),
       (
         Icons.favorite,
-        'Dayanıklılık',
-        '${p.endurance} gün',
-        'Bir görevde ulaştığın en uzun seri',
+        context.t('Dayanıklılık'),
+        context.t('{p0} gün', {'p0': p.endurance}),
+        context.t('Bir görevde ulaştığın en uzun seri'),
       ),
-      (Icons.shield, 'Cesaret', '${p.courage}', 'Bitirdiğin zor görev sayısı'),
+      (
+        Icons.shield,
+        context.t('Cesaret'),
+        '${p.courage}',
+        context.t('Bitirdiğin zor görev sayısı'),
+      ),
       (
         Icons.center_focus_strong,
-        'Odak',
-        p.focus == null ? '–' : '%${p.focus}',
-        'İşaretlerin yüzde kaçı kendi gününde yapıldı',
+        context.t('Odak'),
+        p.focus == null ? '–' : context.percent(p.focus!),
+        context.t('İşaretlerin yüzde kaçı kendi gününde yapıldı'),
       ),
       (
         Icons.check_circle,
-        'Toplam başarı',
+        context.t('Toplam başarı'),
         '${p.totalDone}',
-        'İşaretlediğin tüm görev günleri',
+        context.t('İşaretlediğin tüm görev günleri'),
       ),
       (
         Icons.savings,
-        'Altın',
+        context.t('Altın'),
         '${book.gold}',
-        'Günlük görevler ve haftalık meydan okumadan (${book.questsDone} görev)',
+        context.t('Günlük görevler ve haftalık meydan okumadan ({p0} görev)', {
+          'p0': book.questsDone,
+        }),
       ),
     ];
 
@@ -81,7 +90,7 @@ class CharacterPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            p.title,
+                            context.t(p.title),
                             key: const Key('character-title'),
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w800,
@@ -89,20 +98,30 @@ class CharacterPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${cls.name} · ${cls.motto}',
+                            '${context.t(cls.name)} · ${context.t(cls.motto)}',
                             key: const Key('character-class'),
                             style: theme.textTheme.bodyMedium,
                           ),
                           Text(
-                            'Seviye ${p.level} · toplam ${p.totalXp} XP',
+                            context.t('Seviye {p0} · toplam {p1} XP', {
+                              'p0': p.level,
+                              'p1': p.totalXp,
+                            }),
                             style: theme.textTheme.titleSmall,
                           ),
                           const SizedBox(height: 12),
                           XpBar(profile: p, height: 14),
                           const SizedBox(height: 6),
                           Text(
-                            'Sonraki seviyeye ${p.xpForNext - p.xpIntoLevel} XP '
-                            '· bugün +${p.xpToday} XP',
+                            context.t(
+                              context.t(
+                                'Sonraki seviyeye {p0} XP · bugün +{p1} XP',
+                              ),
+                              {
+                                'p0': p.xpForNext - p.xpIntoLevel,
+                                'p1': p.xpToday,
+                              },
+                            ),
                             style: theme.textTheme.bodySmall,
                           ),
                         ],
@@ -113,7 +132,7 @@ class CharacterPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Statlar', style: theme.textTheme.titleLarge),
+            Text(context.t('Statlar'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             LayoutBuilder(
               builder: (context, c) {
@@ -167,7 +186,7 @@ class CharacterPage extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
-            Text('Sınıf', style: theme.textTheme.titleLarge),
+            Text(context.t('Sınıf'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -177,7 +196,7 @@ class CharacterPage extends StatelessWidget {
                   ChoiceChip(
                     key: Key('class-${c.id}'),
                     avatar: Icon(c.icon, size: 18),
-                    label: Text(c.name),
+                    label: Text(context.t(c.name)),
                     selected: c.id == cls.id,
                     onSelected: (_) => controller.updateSettings(
                       controller.settings.copyWith(charClass: c.id),
@@ -187,11 +206,15 @@ class CharacterPage extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Sınıf yalnızca görünüşü değiştirir; kurallar herkes için aynı.',
+              context.t(
+                context.t(
+                  'Sınıf yalnızca görünüşü değiştirir; kurallar herkes için aynı.',
+                ),
+              ),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
-            Text('Son 26 hafta', style: theme.textTheme.titleLarge),
+            Text(context.t('Son 26 hafta'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Card(
               child: Padding(
@@ -205,7 +228,7 @@ class CharacterPage extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                Text('Rozetler', style: theme.textTheme.titleLarge),
+                Text(context.t('Rozetler'), style: theme.textTheme.titleLarge),
                 const SizedBox(width: 10),
                 Text(
                   '${p.unlockedBadges} / ${p.badges.length}',
@@ -240,8 +263,8 @@ class _BadgeTile extends StatelessWidget {
     final on = badge.unlocked;
     return Tooltip(
       message: on
-          ? '${badge.description} (açıldı)'
-          : '${badge.description}: ${badge.progress} / ${badge.goal}',
+          ? context.t('{p0} (açıldı)', {'p0': context.t(badge.description)})
+          : '${context.t(badge.description)}: ${badge.progress} / ${badge.goal}',
       child: SizedBox(
         width: 132,
         height: 118,
@@ -259,7 +282,7 @@ class _BadgeTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  badge.name,
+                  context.t(badge.name),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   style: theme.textTheme.labelLarge?.copyWith(
@@ -291,22 +314,26 @@ class _HowItWorks extends StatelessWidget {
     return Card(
       child: ExpansionTile(
         key: const Key('how-xp'),
-        title: const Text('Nasıl XP kazanırım?'),
+        title: Text(context.t('Nasıl XP kazanırım?')),
         shape: const Border(),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '• Her işaretlediğin görev günü: Kolay ${Difficulty.kolay.baseXp}, '
-            'Orta ${Difficulty.orta.baseXp}, Zor ${Difficulty.zor.baseXp} XP.\n'
-            '• Kendi gününde işaretlersen +${GameRules.onTimeBonus} XP ve seri '
-            'bonusu: seri günü başına +${GameRules.streakBonusPerDay} XP '
-            '(en fazla +${GameRules.streakBonusCap}).\n'
-            '• Sonradan işaretlenen günler yalnızca temel XP alır.\n'
-            '• Bir günün tüm görevlerini bitirirsen: mükemmel gün, '
-            '+${GameRules.perfectDayBonus} XP ve +1 İrade.\n'
-            '• XP her zaman geçmişten yeniden hesaplanır: bir görevi silersen '
-            'onun XP\'si de gider, hiçbir sayı kendiliğinden artmaz.',
+            context.t(
+              context.t(
+                '• Her işaretlediğin görev günü: Kolay {p0}, Orta {p1}, Zor {p2} XP.\n• Kendi gününde işaretlersen +{p3} XP ve seri bonusu: seri günü başına +{p4} XP (en fazla +{p5}).\n• Sonradan işaretlenen günler yalnızca temel XP alır.\n• Bir günün tüm görevlerini bitirirsen: mükemmel gün, +{p6} XP ve +1 İrade.\n• XP her zaman geçmişten yeniden hesaplanır: bir görevi silersen onun XP\'si de gider, hiçbir sayı kendiliğinden artmaz.',
+              ),
+              {
+                'p0': Difficulty.kolay.baseXp,
+                'p1': Difficulty.orta.baseXp,
+                'p2': Difficulty.zor.baseXp,
+                'p3': GameRules.onTimeBonus,
+                'p4': GameRules.streakBonusPerDay,
+                'p5': GameRules.streakBonusCap,
+                'p6': GameRules.perfectDayBonus,
+              },
+            ),
             style: theme.textTheme.bodyMedium,
           ),
         ],

@@ -71,6 +71,17 @@ void main() {
         tester.getTopLeft(checkOf(id)).dx;
     await tester.tap(find.text('Ayarlar'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('scale-150')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('settings-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('scale-150')));
     await tester.pumpAndSettle();
     expect(h.controller.settings.uiScale, 1.5);
@@ -85,6 +96,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(h.controller.data.isDone(id, h.controller.today), isTrue);
     await tester.tap(find.text('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('scale-reset')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('settings-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('scale-reset')));
     await tester.pumpAndSettle();
@@ -703,12 +725,34 @@ void main() {
       final h = await pumpApp(tester);
       await tester.tap(find.text('Ayarlar'));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('theme-neon')),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('settings-list')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('theme-neon')));
       await tester.pumpAndSettle();
       expect(h.controller.settings.themeId, 'neon');
       expect(h.store.settings.themeId, 'neon');
       final ctx = tester.element(find.byKey(const Key('theme-neon')));
       expect(Theme.of(ctx).colorScheme.primary, const Color(0xFF25E2F2));
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('theme-sade')),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('settings-list')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('theme-sade')));
       await tester.pumpAndSettle();
       expect(Theme.of(ctx).brightness, Brightness.light);

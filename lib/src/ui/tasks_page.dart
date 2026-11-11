@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../domain/repeat_rule.dart';
 import '../domain/task.dart';
@@ -62,17 +64,26 @@ class _TasksPageState extends State<TasksPage> {
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text('Tüm görevler', style: theme.textTheme.headlineSmall),
+                  Text(
+                    context.t('Tüm görevler'),
+                    style: theme.textTheme.headlineSmall,
+                  ),
                   SegmentedButton<_Filter>(
-                    key: const Key('tasks-filter'),
+                    key: Key('tasks-filter'),
                     showSelectedIcon: false,
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: _Filter.active,
-                        label: Text('Süren'),
+                        label: Text(context.t('Süren')),
                       ),
-                      ButtonSegment(value: _Filter.ended, label: Text('Biten')),
-                      ButtonSegment(value: _Filter.all, label: Text('Tümü')),
+                      ButtonSegment(
+                        value: _Filter.ended,
+                        label: Text(context.t('Biten')),
+                      ),
+                      ButtonSegment(
+                        value: _Filter.all,
+                        label: Text(context.t('Tümü')),
+                      ),
                     ],
                     selected: {_filter},
                     onSelectionChanged: (s) =>
@@ -84,7 +95,11 @@ class _TasksPageState extends State<TasksPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                'Düzenlemek için göreve tıkla, sırayı soldaki tutamaçtan sürükle. Sonlandırılan görevin geçmişi kalır.',
+                context.t(
+                  context.t(
+                    'Düzenlemek için göreve tıkla, sırayı soldaki tutamaçtan sürükle. Sonlandırılan görevin geçmişi kalır.',
+                  ),
+                ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -94,9 +109,9 @@ class _TasksPageState extends State<TasksPage> {
               child: tasks.isEmpty
                   ? Center(
                       child: Text(switch (_filter) {
-                        _Filter.active => 'Süren görev yok.',
-                        _Filter.ended => 'Biten görev yok.',
-                        _Filter.all => 'Henüz görev yok.',
+                        _Filter.active => context.t('Süren görev yok.'),
+                        _Filter.ended => context.t('Biten görev yok.'),
+                        _Filter.all => context.t('Henüz görev yok.'),
                       }, style: theme.textTheme.titleMedium),
                     )
                   : ReorderableListView.builder(
@@ -154,16 +169,22 @@ class _TaskCard extends StatelessWidget {
       final end = task.schedule
           .lastWhere((s) => s.rule == null && !s.from.isAfter(today))
           .from;
-      state = '${shortDate(end)} gününden beri sonlandırılmış';
+      state = context.t('{p0} gününden beri sonlandırılmış', {
+        'p0': shortDate(end, en: context.isEnglish),
+      });
     } else if (!active) {
-      state = 'Günü geçti';
+      state = context.t('Günü geçti');
     } else if (rule is OnceRule) {
-      state = rule.date == today ? 'Bugün' : 'Henüz gelmedi';
+      state = rule.date == today ? 'Bugün' : context.t('Henüz gelmedi');
     } else if (task.startDate.isAfter(today)) {
-      state = '${shortDate(task.startDate)} gününde başlayacak';
+      state = context.t('{p0} gününde başlayacak', {
+        'p0': shortDate(task.startDate, en: context.isEnglish),
+      });
     } else {
-      state =
-          '${shortDate(task.startDate)} ${task.startDate.year} gününden beri';
+      state = context.t('{p0} {p1} gününden beri', {
+        'p0': shortDate(task.startDate, en: context.isEnglish),
+        'p1': task.startDate.year,
+      });
     }
 
     return Padding(
@@ -208,7 +229,8 @@ class _TaskCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         [
-                          if (rule != null) describeRule(rule),
+                          if (rule != null)
+                            describeRule(rule, en: context.isEnglish),
                           if (task.time != null) task.time!.format(),
                           state,
                         ].join('  ·  '),
@@ -218,9 +240,8 @@ class _TaskCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         stats.settled == 0
-                            ? 'Son 30 gün: henüz sonuçlanan gün yok'
-                            : 'Son 30 gün: ${stats.settled} günün ${stats.done} gününde yapıldı'
-                                  '${stats.streak > 0 ? '  ·  seri ${stats.streak} gün' : ''}',
+                            ? context.t('Son 30 gün: henüz sonuçlanan gün yok')
+                            : 'Son 30 gün: ${stats.settled} günün ${stats.done} gününde yapıldı${stats.streak > 0 ? '  ·  seri ${stats.streak} gün' : ''}',
                         key: Key('task-stats-${task.id}'),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,

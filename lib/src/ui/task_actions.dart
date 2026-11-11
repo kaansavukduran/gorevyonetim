@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../domain/local_date.dart';
 import '../domain/repeat_rule.dart';
@@ -22,7 +24,7 @@ void showUndoSnack(
       duration: const Duration(seconds: 6),
       action: onUndo == null
           ? null
-          : SnackBarAction(label: 'Geri al', onPressed: onUndo),
+          : SnackBarAction(label: context.t('Geri al'), onPressed: onUndo),
     ),
   );
 }
@@ -84,7 +86,9 @@ void endTask(BuildContext context, TaskController controller, Task task) {
   controller.endTask(task.id);
   showUndoSnack(
     context,
-    '"${task.title}" sonlandırıldı. Geçmiş kayıtları duruyor.',
+    context.t('"{p0}" sonlandırıldı. Geçmiş kayıtları duruyor.', {
+      'p0': task.title,
+    }),
     onUndo: () => controller.restore(before),
   );
 }
@@ -100,7 +104,7 @@ Future<void> restartTask(
     defaultStart: controller.today,
     today: controller.today,
     initialRule: task.lastRule ?? const DailyRule(),
-    heading: 'Yeniden başlat',
+    heading: context.t('Yeniden başlat'),
   );
   if (draft == null) return;
   controller.restartTask(task.id, draft.rule);
@@ -123,17 +127,23 @@ Future<void> deleteTask(
   final sure = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Görev silinsin mi?'),
+      title: Text(context.t('Görev silinsin mi?')),
       content: Text(
-        '"${task.title}" ve ${ticks == 0 ? 'hiç işareti yok' : '$ticks günlük işareti'} '
-        'kalıcı olarak silinir.\n\n'
-        'Geçmişi saklamak istersen "Sonlandır" seç: görev bugünden sonra '
-        'görünmez, eski günler kalır.',
+        context.t(
+          ticks == 0
+              ? context.t(
+                  '"{p0}" kalıcı olarak silinir (hiç işareti yok).\n\nGeçmişi saklamak istersen "Sonlandır" seç: görev bugünden sonra görünmez, eski günler kalır.',
+                )
+              : context.t(
+                  '"{p0}" ve {p1} günlük işareti kalıcı olarak silinir.\n\nGeçmişi saklamak istersen "Sonlandır" seç: görev bugünden sonra görünmez, eski günler kalır.',
+                ),
+          {'p0': task.title, 'p1': ticks},
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Vazgeç'),
+          child: Text(context.t('Vazgeç')),
         ),
         FilledButton.tonal(
           key: const Key('confirm-delete'),
@@ -141,7 +151,7 @@ Future<void> deleteTask(
             foregroundColor: Theme.of(context).colorScheme.error,
           ),
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Kalıcı olarak sil'),
+          child: Text(context.t('Kalıcı olarak sil')),
         ),
       ],
     ),
@@ -158,24 +168,25 @@ Future<void> deleteTask(
 
 /// What the task menu offers (the ⋮ button and a right-click show the same).
 List<PopupMenuEntry<String>> taskMenuItems(
+  BuildContext context,
   TaskController controller,
   Task task,
 ) {
   final ended = task.isEndedOn(controller.today);
   return [
-    const PopupMenuItem(
+    PopupMenuItem(
       value: 'edit',
       child: ListTile(
         leading: Icon(Icons.edit_rounded),
-        title: Text('Düzenle'),
+        title: Text(context.t('Düzenle')),
       ),
     ),
     if (ended)
-      const PopupMenuItem(
+      PopupMenuItem(
         value: 'restart',
         child: ListTile(
           leading: Icon(Icons.play_arrow_rounded),
-          title: Text('Yeniden başlat'),
+          title: Text(context.t('Yeniden başlat')),
         ),
       )
     else
@@ -183,17 +194,19 @@ List<PopupMenuEntry<String>> taskMenuItems(
         value: 'end',
         child: ListTile(
           leading: const Icon(Icons.stop_circle_outlined),
-          title: const Text('Sonlandır'),
+          title: Text(context.t('Sonlandır')),
           subtitle: Text(
-            '${shortDate(controller.today)} ve sonrasında görünmez',
+            context.t('{p0} ve sonrasında görünmez', {
+              'p0': shortDate(controller.today, en: context.isEnglish),
+            }),
           ),
         ),
       ),
-    const PopupMenuItem(
+    PopupMenuItem(
       value: 'delete',
       child: ListTile(
         leading: Icon(Icons.delete_outline_rounded),
-        title: Text('Sil'),
+        title: Text(context.t('Sil')),
       ),
     ),
   ];
@@ -231,7 +244,7 @@ Future<void> showTaskMenuAt(
       globalPosition & const Size(1, 1),
       Offset.zero & overlay.size,
     ),
-    items: taskMenuItems(controller, task),
+    items: taskMenuItems(context, controller, task),
   );
   if (context.mounted) runTaskMenu(context, controller, task, value);
 }
@@ -246,9 +259,9 @@ class TaskMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PopupMenuButton<String>(
     key: Key('task-menu-${task.id}'),
-    tooltip: 'Görev seçenekleri (sağ tık da açar)',
+    tooltip: context.t('Görev seçenekleri (sağ tık da açar)'),
     icon: const Icon(Icons.more_vert_rounded),
     onSelected: (value) => runTaskMenu(context, controller, task, value),
-    itemBuilder: (context) => taskMenuItems(controller, task),
+    itemBuilder: (context) => taskMenuItems(context, controller, task),
   );
 }

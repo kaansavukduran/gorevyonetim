@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'l10n.dart';
+
 import 'package:flutter/services.dart';
 
 /// Preview while dragging; commit on release so whole-window zoom does not
@@ -62,7 +65,12 @@ class _FineSliderState extends State<FineSlider> {
   void _submit() {
     final value = int.tryParse(_text.text);
     if (value == null || value < widget.min || value > widget.max) {
-      setState(() => _error = '${widget.min}–${widget.max} arası');
+      setState(
+        () => _error = context.t('{p0}–{p1} arası', {
+          'p0': widget.min,
+          'p1': widget.max,
+        }),
+      );
       return;
     }
     _preview(value);
@@ -118,7 +126,12 @@ class _FineSliderState extends State<FineSlider> {
                     value <= widget.max) {
                   _preview(value, updateText: false);
                 } else {
-                  setState(() => _error = '${widget.min}–${widget.max} arası');
+                  setState(
+                    () => _error = context.t('{p0}–{p1} arası', {
+                      'p0': widget.min,
+                      'p1': widget.max,
+                    }),
+                  );
                 }
               },
               onSubmitted: (_) => _submit(),
@@ -131,7 +144,7 @@ class _FineSliderState extends State<FineSlider> {
         child: TextButton(
           key: Key('${widget.id}-apply'),
           onPressed: _submit,
-          child: const Text('Uygula'),
+          child: Text(context.t('Uygula')),
         ),
       ),
     ],

@@ -23,6 +23,10 @@ Kurallar:
 
 Kısayollar: `Ctrl+N` yeni görev · `Alt+←/→` önceki/sonraki gün · `Alt+B` bugün · `Ctrl+1…5` sekmeler · sağ tık görev menüsü.
 
+## Dil ve erişilebilirlik
+
+Ayarlar → Genel ve Dil: Sistem, Türkçe ya da English. Ayarlar → Erişilebilirlik: yazı tipi (sistem, Atkinson Hyperlegible Next, Lexend ya da disleksi dostu OpenDyslexic), arayüz ölçeğinden bağımsız yazı boyutu (%80–%200) ve yüksek kontrast. Yazı tipleri uygulamayla gelir, internet gerekmez.
+
 ## Veriler nerede
 
 `%APPDATA%\GunlukGorevler\gorevler.json` (tek bir JSON dosyası). Her yazma önce geçici dosyaya yapılır, sonra eskisinin yerine konur; yarıda kesilen bir yazma eski dosyayı bozmaz. Her gün ilk değişiklikten önce dosyanın o anki hali `yedekler\gorevler-YYYY-AA-GG.json` olarak saklanır (son 14 gün). Okunamayan bir dosyanın üzerine asla yazılmaz. Dosya biçimi 2 (biçim 1 dosyaları açılır). Tema, oyun modu, karakter sınıfı ve arayüz ölçeği ayrı bir `ayarlar.json` dosyasında. Masaüstünde dışa aktarılan yedekler İndirilenler klasörüne gider; Android’de sistemin dosya seçicisiyle konum seçilir; içe aktarmadan önce mevcut liste `yedekler` klasörüne kaydedilir. İnternete hiçbir şey gönderilmez; uygulama yalnızca Flutter SDK paketlerini kullanır.

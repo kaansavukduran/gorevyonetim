@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../storage/task_store.dart';
 import 'task_actions.dart';
 import 'themes.dart';
+import 'accessibility_card.dart';
 import 'scale_settings_card.dart';
 import 'theme_customization_card.dart';
 import 'fine_slider.dart';
@@ -27,11 +30,25 @@ class SettingsPage extends StatelessWidget {
           key: const Key('settings-list'),
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
           children: [
-            Text('Görünüm ve boyut', style: theme.textTheme.titleLarge),
+            Text(context.t('Genel ve Dil'), style: theme.textTheme.titleLarge),
+            const SizedBox(height: 8),
+            LanguageCard(controller: controller),
+            const SizedBox(height: 20),
+            Text(
+              context.t('Erişilebilirlik'),
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            AccessibilityCard(controller: controller),
+            const SizedBox(height: 20),
+            Text(
+              context.t('Görünüm ve boyut'),
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             ScaleSettingsCard(controller: controller),
             const SizedBox(height: 20),
-            Text('Tema', style: theme.textTheme.titleLarge),
+            Text(context.t('Tema'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Wrap(
               spacing: 12,
@@ -61,10 +78,13 @@ class SettingsPage extends StatelessWidget {
                 value: settings.gameMode,
                 onChanged: (v) =>
                     controller.updateSettings(settings.copyWith(gameMode: v)),
-                title: const Text('Oyun modu'),
-                subtitle: const Text(
-                  'XP, seviye, statlar ve rozetler. Kapatırsan sade bir liste kalır; '
-                  'puanlar kaybolmaz, geçmişten yeniden hesaplanır.',
+                title: Text(context.t('Oyun modu')),
+                subtitle: Text(
+                  context.t(
+                    context.t(
+                      'XP, seviye, statlar ve rozetler. Kapatırsan sade bir liste kalır; puanlar kaybolmaz, geçmişten yeniden hesaplanır.',
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -75,15 +95,22 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Günlük hedef', style: theme.textTheme.titleMedium),
+                      Text(
+                        context.t('Günlük hedef'),
+                        style: theme.textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Günde kaç görev bitirmek istiyorsun? İlerleme yalnız işaretlediğin görevlerden hesaplanır.',
+                      Text(
+                        context.t(
+                          context.t(
+                            'Günde kaç görev bitirmek istiyorsun? İlerleme yalnız işaretlediğin görevlerden hesaplanır.',
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       FineSlider(
                         id: 'daily-goal',
-                        label: 'Hedef',
+                        label: context.t('Hedef'),
                         value: settings.dailyGoal.clamp(1, 20),
                         min: 1,
                         max: 20,
@@ -94,9 +121,13 @@ class SettingsPage extends StatelessWidget {
                       SwitchListTile(
                         key: const Key('celebration-effects'),
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Kutlama efektleri'),
-                        subtitle: const Text(
-                          'Konfeti ve seviye animasyonu. Cihazın hareket azaltma ayarına uyulur.',
+                        title: Text(context.t('Kutlama efektleri')),
+                        subtitle: Text(
+                          context.t(
+                            context.t(
+                              'Konfeti ve seviye animasyonu. Cihazın hareket azaltma ayarına uyulur.',
+                            ),
+                          ),
                         ),
                         value: settings.celebrationEffects,
                         onChanged: (v) => controller.updateSettings(
@@ -109,7 +140,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 20),
-            Text('Yedek', style: theme.textTheme.titleLarge),
+            Text(context.t('Yedek'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Card(
               child: Padding(
@@ -119,8 +150,16 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     Text(
                       store.usesSystemFilePicker
-                          ? 'Yedeğini dosya seçicisinden belirlediğin konuma kaydet veya daha önce aldığın bir yedeği aç. Başka bir cihaza taşımak için de kullanabilirsin.'
-                          : 'Görevlerini İndirilenler klasörüne kaydet ya da daha önce aldığın bir yedeği geri yükle. Başka bir cihaza taşımak için de kullanabilirsin.',
+                          ? context.t(
+                              context.t(
+                                'Yedeğini dosya seçicisinden belirlediğin konuma kaydet veya daha önce aldığın bir yedeği aç. Başka bir cihaza taşımak için de kullanabilirsin.',
+                              ),
+                            )
+                          : context.t(
+                              context.t(
+                                'Görevlerini İndirilenler klasörüne kaydet ya da daha önce aldığın bir yedeği geri yükle. Başka bir cihaza taşımak için de kullanabilirsin.',
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 12),
                     Wrap(
@@ -130,13 +169,13 @@ class SettingsPage extends StatelessWidget {
                         FilledButton.icon(
                           key: const Key('export'),
                           icon: const Icon(Icons.upload_file),
-                          label: const Text('Yedeği dışa aktar'),
+                          label: Text(context.t('Yedeği dışa aktar')),
                           onPressed: () => _export(context),
                         ),
                         OutlinedButton.icon(
                           key: const Key('import'),
                           icon: const Icon(Icons.download),
-                          label: const Text('Yedeği içe aktar'),
+                          label: Text(context.t('Yedeği içe aktar')),
                           onPressed: () => _import(context),
                         ),
                       ],
@@ -146,7 +185,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Veriler', style: theme.textTheme.titleLarge),
+            Text(context.t('Veriler'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Card(
               child: Padding(
@@ -156,8 +195,16 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     Text(
                       store.persistent
-                          ? 'Görevlerin yalnızca bu cihazda saklanır; uygulama bir sunucuya veri göndermez. Her gün otomatik yedek alınır (son 14 gün).'
-                          : 'Bu tarayıcı önizlemesindeki görevler sekmenin belleğinde durur; sekme kapatılınca kaybolur.',
+                          ? context.t(
+                              context.t(
+                                'Görevlerin yalnızca bu cihazda saklanır; uygulama bir sunucuya veri göndermez. Her gün otomatik yedek alınır (son 14 gün).',
+                              ),
+                            )
+                          : context.t(
+                              context.t(
+                                'Bu tarayıcı önizlemesindeki görevler sekmenin belleğinde durur; sekme kapatılınca kaybolur.',
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 8),
                     if (store.canRevealLocation) ...[
@@ -169,20 +216,28 @@ class SettingsPage extends StatelessWidget {
                       OutlinedButton.icon(
                         key: const Key('about-open-folder'),
                         icon: const Icon(Icons.folder_open, size: 18),
-                        label: const Text('Klasörü aç'),
+                        label: Text(context.t('Klasörü aç')),
                         onPressed: () async {
                           final ok = await store.revealLocation();
                           if (!ok && context.mounted) {
                             showUndoSnack(
                               context,
-                              'Klasör açılamadı. Yukarıdaki yolu seçip kopyalayabilirsin.',
+                              context.t(
+                                context.t(
+                                  'Klasör açılamadı. Yukarıdaki yolu seçip kopyalayabilirsin.',
+                                ),
+                              ),
                             );
                           }
                         },
                       ),
                     ] else if (store.persistent)
-                      const Text(
-                        'Veriler uygulamanın özel alanında korunur. Dışarıda saklamak veya başka cihaza taşımak için Yedek bölümünü kullan. Uygulamayı kaldırmadan önce yedeğini dışa aktar.',
+                      Text(
+                        context.t(
+                          context.t(
+                            'Veriler uygulamanın özel alanında korunur. Dışarıda saklamak veya başka cihaza taşımak için Yedek bölümünü kullan. Uygulamayı kaldırmadan önce yedeğini dışa aktar.',
+                          ),
+                        ),
                         key: Key('private-storage-help'),
                       ),
                   ],
@@ -190,23 +245,26 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Kısayollar', style: theme.textTheme.titleLarge),
+            Text(context.t('Kısayollar'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
-            const Card(
+            Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
-                  'Ctrl + N  yeni görev\n'
-                  'Alt + ← / →  önceki / sonraki gün\n'
-                  'Alt + B  bugüne dön\n'
-                  'Ctrl + 1 … 5  sekmeler\n'
-                  'Sağ tık  görev menüsü',
+                  context.t(
+                    context.t(
+                      'Ctrl + N  yeni görev\nAlt + ← / →  önceki / sonraki gün\nAlt + B  bugüne dön\nCtrl + 1 … 5  sekmeler\nSağ tık  görev menüsü',
+                    ),
+                  ),
                 ),
               ),
             ),
             if (version.isNotEmpty) ...[
               const SizedBox(height: 16),
-              Text('Sürüm $version', style: theme.textTheme.bodySmall),
+              Text(
+                context.t('Sürüm {p0}', {'p0': version}),
+                style: theme.textTheme.bodySmall,
+              ),
             ],
           ],
         ),
@@ -221,11 +279,16 @@ class SettingsPage extends StatelessWidget {
       showUndoSnack(
         context,
         path == null
-            ? 'Yedek kaydedilmedi veya işlem iptal edildi.'
-            : 'Yedek kaydedildi: $path',
+            ? context.t('Yedek kaydedilmedi veya işlem iptal edildi.')
+            : context.t('Yedek kaydedildi: {p0}', {'p0': path}),
       );
     } catch (e) {
-      if (context.mounted) showUndoSnack(context, 'Yedek kaydedilemedi: $e');
+      if (context.mounted) {
+        showUndoSnack(
+          context,
+          context.t('Yedek kaydedilemedi: {p0}', {'p0': e}),
+        );
+      }
     }
   }
 
@@ -234,7 +297,9 @@ class SettingsPage extends StatelessWidget {
     try {
       candidates = await controller.store.importCandidates();
     } catch (e) {
-      if (context.mounted) showUndoSnack(context, 'Yedek açılamadı: $e');
+      if (context.mounted) {
+        showUndoSnack(context, context.t('Yedek açılamadı: {p0}', {'p0': e}));
+      }
       return;
     }
     if (!context.mounted) return;
@@ -243,14 +308,16 @@ class SettingsPage extends StatelessWidget {
     final chosen = await showDialog<BackupCandidate>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Yedek seç'),
+        title: Text(context.t('Yedek seç')),
         content: SizedBox(
           width: 520,
           child: candidates.isEmpty
-              ? const Text(
-                  'İndirilenler klasöründe ya da otomatik yedeklerde bu uygulamaya '
-                  'ait bir yedek bulunamadı. Yedek dosyasını İndirilenler '
-                  'klasörüne koyup tekrar dene.',
+              ? Text(
+                  context.t(
+                    context.t(
+                      'İndirilenler klasöründe ya da otomatik yedeklerde bu uygulamaya ait bir yedek bulunamadı. Yedek dosyasını İndirilenler klasörüne koyup tekrar dene.',
+                    ),
+                  ),
                 )
               : ListView(
                   shrinkWrap: true,
@@ -259,9 +326,12 @@ class SettingsPage extends StatelessWidget {
                       ListTile(
                         key: Key('candidate-${c.name}'),
                         leading: const Icon(Icons.description_outlined),
-                        title: Text(c.name),
+                        title: Text(context.t(c.name)),
                         subtitle: Text(
-                          '${c.taskCount} görev · ${_when(c.modified)}',
+                          context.t('{p0} görev · {p1}', {
+                            'p0': c.taskCount,
+                            'p1': _when(c.modified),
+                          }),
                         ),
                         onTap: () => Navigator.pop(context, c),
                       ),
@@ -271,7 +341,7 @@ class SettingsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Vazgeç'),
+            child: Text(context.t('Vazgeç')),
           ),
         ],
       ),
@@ -280,21 +350,24 @@ class SettingsPage extends StatelessWidget {
     final sure = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Bu yedek yüklensin mi?'),
+        title: Text(context.t('Bu yedek yüklensin mi?')),
         content: Text(
-          '"${chosen.name}" (${chosen.taskCount} görev) şu anki listenin yerine '
-          'geçecek. Şu anki liste önce otomatik yedeklere kaydedilir; '
-          'istersen ondan geri dönebilirsin.',
+          context.t(
+            context.t(
+              '"{p0}" ({p1} görev) şu anki listenin yerine geçecek. Şu anki liste önce otomatik yedeklere kaydedilir; istersen ondan geri dönebilirsin.',
+            ),
+            {'p0': chosen.name, 'p1': chosen.taskCount},
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Vazgeç'),
+            child: Text(context.t('Vazgeç')),
           ),
           FilledButton(
             key: const Key('confirm-import'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yükle'),
+            child: Text(context.t('Yükle')),
           ),
         ],
       ),
@@ -310,13 +383,16 @@ class SettingsPage extends StatelessWidget {
         'Yedek yüklendi.${kept == null
             ? ''
             : controller.store.canRevealLocation
-            ? ' Önceki liste: $kept'
-            : ' Önceki liste otomatik yedeklendi.'}',
+            ? context.t(' Önceki liste: {p0}', {'p0': kept})
+            : context.t(' Önceki liste otomatik yedeklendi.')}',
         onUndo: () => controller.restore(before),
       );
     } on FormatException catch (e) {
       if (context.mounted) {
-        showUndoSnack(context, 'Bu yedek okunamadı: ${e.message}');
+        showUndoSnack(
+          context,
+          context.t('Bu yedek okunamadı: {p0}', {'p0': e.message}),
+        );
       }
     }
   }
@@ -382,7 +458,7 @@ class _ThemeCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    spec.name,
+                    context.t(spec.name),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -394,7 +470,7 @@ class _ThemeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    spec.tagline,
+                    context.t(spec.tagline),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

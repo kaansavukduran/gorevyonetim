@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n.dart';
+
 import '../app/task_controller.dart';
 import '../domain/local_date.dart';
 import '../domain/repeat_rule.dart';
@@ -119,7 +121,7 @@ class DayPage extends StatelessWidget {
                     children: [
                       ChoiceChip(
                         key: const Key('sort-manual'),
-                        label: const Text('Kendi sıram'),
+                        label: Text(context.t('Kendi sıram')),
                         selected: !controller.settings.sortByTime,
                         onSelected: (_) => controller.updateSettings(
                           controller.settings.copyWith(sortByTime: false),
@@ -127,14 +129,18 @@ class DayPage extends StatelessWidget {
                       ),
                       ChoiceChip(
                         key: const Key('sort-time'),
-                        label: const Text('Saate göre'),
+                        label: Text(context.t('Saate göre')),
                         selected: controller.settings.sortByTime,
                         onSelected: (_) => controller.updateSettings(
                           controller.settings.copyWith(sortByTime: true),
                         ),
                       ),
-                      const Tooltip(
-                        message: 'Görevleri soldaki tutamaçtan yukarı veya aşağı sürükleyebilirsin.',
+                      Tooltip(
+                        message: context.t(
+                          context.t(
+                            'Görevleri soldaki tutamaçtan yukarı veya aşağı sürükleyebilirsin.',
+                          ),
+                        ),
                         child: Icon(Icons.drag_indicator, size: 20),
                       ),
                     ],
@@ -145,8 +151,8 @@ class DayPage extends StatelessWidget {
               _sectionHeader(
                 context,
                 day.isBefore(today)
-                    ? 'Yapılmayanlar (${open.length})'
-                    : 'Yapılacaklar (${open.length})',
+                    ? context.t('Yapılmayanlar ({p0})', {'p0': open.length})
+                    : context.t('Yapılacaklar ({p0})', {'p0': open.length}),
               ),
               SliverReorderableList(
                 key: const Key('day-open-list'),
@@ -169,7 +175,10 @@ class DayPage extends StatelessWidget {
               ),
             ],
             if (done.isNotEmpty) ...[
-              _sectionHeader(context, 'Tamamlananlar (${done.length})'),
+              _sectionHeader(
+                context,
+                context.t('Tamamlananlar ({p0})', {'p0': done.length}),
+              ),
               SliverReorderableList(
                 key: const Key('day-done-list'),
                 itemCount: done.length,
@@ -229,7 +238,7 @@ class _DayTitle extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                relativeDay(day, today),
+                relativeDay(day, today, en: context.isEnglish),
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -241,7 +250,7 @@ class _DayTitle extends StatelessWidget {
                   final picked = await pickDate(
                     context,
                     initial: day,
-                    help: 'Gün seç',
+                    help: context.t('Gün seç'),
                   );
                   if (picked != null) onDayChanged(picked);
                 },
@@ -252,7 +261,7 @@ class _DayTitle extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          '${longDate(day)}, ${weekdayName(day)}',
+                          '${longDate(day, en: context.isEnglish)}, ${weekdayName(day, en: context.isEnglish)}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -273,7 +282,7 @@ class _DayTitle extends StatelessWidget {
           TextButton.icon(
             key: const Key('day-today'),
             icon: const Icon(Icons.today_rounded, size: 18),
-            label: const Text('Bugüne dön'),
+            label: Text(context.t('Bugüne dön')),
             onPressed: () => onDayChanged(today),
           ),
       ],
@@ -301,7 +310,7 @@ class _WeekStrip extends StatelessWidget {
       children: [
         IconButton(
           key: const Key('week-prev'),
-          tooltip: 'Önceki hafta',
+          tooltip: context.t('Önceki hafta'),
           icon: const Icon(Icons.chevron_left_rounded),
           onPressed: () => onDayChanged(day.addDays(-7)),
         ),
@@ -316,7 +325,7 @@ class _WeekStrip extends StatelessWidget {
           ),
         IconButton(
           key: const Key('week-next'),
-          tooltip: 'Sonraki hafta',
+          tooltip: context.t('Sonraki hafta'),
           icon: const Icon(Icons.chevron_right_rounded),
           onPressed: () => onDayChanged(day.addDays(7)),
         ),
@@ -351,11 +360,20 @@ class _DayPill extends StatelessWidget {
 
     final String tip;
     if (tasks.isEmpty) {
-      tip = '${shortDate(date)}: görev yok';
+      tip = context.t('{p0}: görev yok', {
+        'p0': shortDate(date, en: context.isEnglish),
+      });
     } else if (future) {
-      tip = '${shortDate(date)}: ${tasks.length} görev planlı';
+      tip = context.t('{p0}: {p1} görev planlı', {
+        'p0': shortDate(date, en: context.isEnglish),
+        'p1': tasks.length,
+      });
     } else {
-      tip = '${shortDate(date)}: ${tasks.length} görevden $done tanesi yapıldı';
+      tip = context.t('{p0}: {p1} görevden {p2} tanesi yapıldı', {
+        'p0': shortDate(date, en: context.isEnglish),
+        'p1': tasks.length,
+        'p2': done,
+      });
     }
 
     final Widget mark;
@@ -394,7 +412,7 @@ class _DayPill extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    weekdayShort[date.weekday - 1],
+                    weekdayAbbr(date.weekday, en: context.isEnglish),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: selected
                           ? scheme.onPrimaryContainer
@@ -457,8 +475,14 @@ class _DaySummary extends StatelessWidget {
             Expanded(
               child: Text(
                 day == today
-                    ? 'Bugünün hepsi tamam: $total / $total'
-                    : 'O günün hepsi yapılmış: $total / $total',
+                    ? context.t('Bugünün hepsi tamam: {p0} / {p1}', {
+                        'p0': total,
+                        'p1': total,
+                      })
+                    : context.t('O günün hepsi yapılmış: {p0} / {p1}', {
+                        'p0': total,
+                        'p1': total,
+                      }),
                 key: const Key('day-summary'),
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: scheme.onPrimaryContainer,
@@ -471,12 +495,17 @@ class _DaySummary extends StatelessWidget {
     }
     final String text;
     if (day.isAfter(today)) {
-      text = '$total görev planlı';
+      text = context.t('{p0} görev planlı', {'p0': total});
     } else if (day.isBefore(today)) {
-      text =
-          '$total görevden $done tanesi yapıldı, ${total - done} tanesi yapılmadı';
+      text = context.t(
+        context.t('{p0} görevden {p1} tanesi yapıldı, {p2} tanesi yapılmadı'),
+        {'p0': total, 'p1': done, 'p2': total - done},
+      );
     } else {
-      text = '$total görevden $done tanesi tamamlandı';
+      text = context.t('{p0} görevden {p1} tanesi tamamlandı', {
+        'p0': total,
+        'p1': done,
+      });
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,9 +563,11 @@ class _QuickAddState extends State<_QuickAdd> {
   };
 
   String _label(_QuickRepeat r) => switch (r) {
-    _QuickRepeat.daily => 'Her gün',
-    _QuickRepeat.weekdays => 'Hafta içi',
-    _QuickRepeat.once => 'Sadece ${shortDate(widget.day)}',
+    _QuickRepeat.daily => context.t('Her gün'),
+    _QuickRepeat.weekdays => context.t('Hafta içi'),
+    _QuickRepeat.once => context.t('Sadece {p0}', {
+      'p0': shortDate(widget.day, en: context.isEnglish),
+    }),
   };
 
   void _add() {
@@ -576,8 +607,10 @@ class _QuickAddState extends State<_QuickAdd> {
       textInputAction: TextInputAction.done,
       onSubmitted: (_) => _add(),
       decoration: InputDecoration(
-        hintText: 'Görev ekle ve Enter\'a bas',
-        helperText: _time == null ? null : 'Görev saati: ${_time!.format()}',
+        hintText: context.t('Görev ekle ve Enter\'a bas'),
+        helperText: _time == null
+            ? null
+            : context.t('Görev saati: {p0}', {'p0': _time!.format()}),
         filled: true,
         fillColor: scheme.surfaceContainerLow,
         prefixIcon: const Icon(Icons.add_rounded),
@@ -597,8 +630,8 @@ class _QuickAddState extends State<_QuickAdd> {
               IconButton(
                 key: const Key('quick-time'),
                 tooltip: _time == null
-                    ? 'Göreve saat ekle'
-                    : 'Görev saati: ${_time!.format()}',
+                    ? context.t('Göreve saat ekle')
+                    : context.t('Görev saati: {p0}', {'p0': _time!.format()}),
                 icon: Icon(
                   _time == null ? Icons.schedule_outlined : Icons.schedule,
                   color: _time == null
@@ -613,13 +646,13 @@ class _QuickAddState extends State<_QuickAdd> {
               if (_time != null)
                 IconButton(
                   key: const Key('quick-time-clear'),
-                  tooltip: 'Görev saatini kaldır',
+                  tooltip: context.t('Görev saatini kaldır'),
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: () => setState(() => _time = null),
                 ),
               PopupMenuButton<Object>(
                 key: const Key('quick-repeat'),
-                tooltip: 'Ne sıklıkla?',
+                tooltip: context.t('Ne sıklıkla?'),
                 onSelected: (v) {
                   if (v is _QuickRepeat) {
                     setState(() => _repeat = v);
@@ -636,10 +669,12 @@ class _QuickAddState extends State<_QuickAdd> {
                       child: Text(_label(r)),
                     ),
                   const PopupMenuDivider(),
-                  const PopupMenuItem<Object>(
+                  PopupMenuItem<Object>(
                     key: Key('quick-details'),
                     value: 'details',
-                    child: Text('Ayrıntılı ekle (not, belirli günler)…'),
+                    child: Text(
+                      context.t('Ayrıntılı ekle (not, belirli günler)…'),
+                    ),
                   ),
                 ],
                 child: Padding(
@@ -676,7 +711,7 @@ class _QuickAddState extends State<_QuickAdd> {
                 builder: (_, value, _) => FilledButton(
                   key: const Key('quick-add-button'),
                   onPressed: value.text.trim().isEmpty ? null : _add,
-                  child: const Text('Ekle'),
+                  child: Text(context.t('Ekle')),
                 ),
               ),
             ],
@@ -707,13 +742,18 @@ class _EmptyDay extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isPast ? 'Bu gün için görev yoktu.' : 'Bu gün için görev yok.',
+            isPast
+                ? context.t('Bu gün için görev yoktu.')
+                : context.t('Bu gün için görev yok.'),
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
           Text(
-            'Yukarıya bir görev yaz, Enter\'a bas. Her gün listende olur;\n'
-            'sıklığı yandaki seçimle değiştirebilirsin.',
+            context.t(
+              context.t(
+                'Yukarıya bir görev yaz, Enter\'a bas. Her gün listende olur;\nsıklığı yandaki seçimle değiştirebilirsin.',
+              ),
+            ),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -761,7 +801,7 @@ class _TaskTileState extends State<TaskTile> {
     if (!nowDone) {
       showUndoSnack(
         context,
-        '"${task.title}" işareti kaldırıldı.',
+        context.t('"{p0}" işareti kaldırıldı.', {'p0': task.title}),
         onUndo: () => controller.restore(before),
       );
     }
@@ -838,9 +878,9 @@ class _TaskTileState extends State<TaskTile> {
         ),
         label: Text(
           task.time == null
-              ? 'Saat ekle'
+              ? context.t('Saat ekle')
               : late
-              ? '${task.time!.format()} geçti'
+              ? context.t('{p0} geçti', {'p0': task.time!.format()})
               : task.time!.format(),
           style: TextStyle(color: late ? scheme.error : null),
         ),
@@ -852,7 +892,7 @@ class _TaskTileState extends State<TaskTile> {
         onDeleted: task.time == null
             ? null
             : () => controller.setTaskTime(task.id, null),
-        deleteButtonTooltipMessage: 'Saati kaldır',
+        deleteButtonTooltipMessage: context.t('Saati kaldır'),
       ),
       if (task.steps.isNotEmpty)
         Padding(
@@ -862,23 +902,29 @@ class _TaskTileState extends State<TaskTile> {
             style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
             onPressed: () => setState(() => _open = !_open),
             icon: Icon(_open ? Icons.expand_less : Icons.expand_more, size: 18),
-            label: Text('${stepsDone.length}/${task.steps.length} adım'),
+            label: Text(
+              context.t('{p0}/{p1} adım', {
+                'p0': stepsDone.length,
+                'p1': task.steps.length,
+              }),
+            ),
           ),
         ),
       if (game)
         Tooltip(
-          message: '${task.difficulty.label}: ${task.difficulty.baseXp} XP',
+          message:
+              '${context.t(task.difficulty.label)}: ${task.difficulty.baseXp} XP',
           child: chip(
-            task.difficulty.label,
+            context.t(task.difficulty.label),
             key: Key('task-diff-${task.id}'),
             color: diffColor,
           ),
         ),
       if (streak >= 2)
         Tooltip(
-          message: 'Üst üste $streak gün yapıldı',
+          message: context.t('Üst üste {p0} gün yapıldı', {'p0': streak}),
           child: chip(
-            '$streak gün',
+            context.t('{p0} gün', {'p0': streak}),
             key: Key('task-streak-${task.id}'),
             icon: Icons.whatshot,
             color: scheme.tertiary,
@@ -918,7 +964,7 @@ class _TaskTileState extends State<TaskTile> {
                         child: MouseRegion(
                           cursor: SystemMouseCursors.grab,
                           child: Tooltip(
-                            message: 'Sürükleyerek sırala',
+                            message: context.t('Sürükleyerek sırala'),
                             child: SizedBox(
                               key: Key('task-drag-${task.id}'),
                               width: 32,
@@ -930,10 +976,10 @@ class _TaskTileState extends State<TaskTile> {
                       ),
                     Tooltip(
                       message: future
-                          ? 'İleri bir gün işaretlenemez'
+                          ? context.t('İleri bir gün işaretlenemez')
                           : (done
-                                ? 'İşareti kaldır'
-                                : 'Yapıldı olarak işaretle'),
+                                ? context.t('İşareti kaldır')
+                                : context.t('Yapıldı olarak işaretle')),
                       child: Transform.scale(
                         scale: 1.2,
                         child: Checkbox(
@@ -942,7 +988,7 @@ class _TaskTileState extends State<TaskTile> {
                           shape: const CircleBorder(),
                           onChanged: future ? null : (_) => _toggle(),
                           semanticLabel:
-                              '${task.title}: ${StatusStyle.of(status, scheme).label}',
+                              '${task.title}: ${context.t(StatusStyle.of(status, scheme).label)}',
                         ),
                       ),
                     ),
@@ -1055,8 +1101,11 @@ class _StatusLine extends StatelessWidget {
         add(
           TextSpan(
             text: tickDay == day
-                ? '${clockTime(at)} işaretlendi'
-                : '${shortDate(tickDay)} ${clockTime(at)} sonradan işaretlendi',
+                ? context.t('{p0} işaretlendi', {'p0': clockTime(at)})
+                : context.t('{p0} {p1} sonradan işaretlendi', {
+                    'p0': shortDate(tickDay, en: context.isEnglish),
+                    'p1': clockTime(at),
+                  }),
             style: small?.copyWith(
               color: scheme.primary,
               fontWeight: FontWeight.w600,
@@ -1066,7 +1115,7 @@ class _StatusLine extends StatelessWidget {
       case DayStatus.missed:
         add(
           TextSpan(
-            text: 'Yapılmadı',
+            text: context.t('Yapılmadı'),
             style: small?.copyWith(
               color: scheme.error,
               fontWeight: FontWeight.w600,
@@ -1074,12 +1123,19 @@ class _StatusLine extends StatelessWidget {
           ),
         );
       case DayStatus.upcoming:
-        add(TextSpan(text: 'Planlı', style: small));
+        add(TextSpan(text: context.t('Planlı'), style: small));
       case DayStatus.pending:
       case DayStatus.notScheduled:
         break;
     }
-    if (rule != null) add(TextSpan(text: describeRule(rule!), style: small));
+    if (rule != null) {
+      add(
+        TextSpan(
+          text: describeRule(rule!, en: context.isEnglish),
+          style: small,
+        ),
+      );
+    }
     if (note.isNotEmpty) add(TextSpan(text: note, style: small));
     if (parts.isEmpty) return const SizedBox.shrink();
     return Text.rich(

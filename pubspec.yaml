@@ -1,7 +1,7 @@
 name: gunluk_gorevler
 description: "Günlük Görevler: her gün tik atılan görev listesi"
 publish_to: 'none'
-version: 1.2.1+3
+version: 1.3.0+4
 
 environment:
   sdk: ^3.13.5
@@ -22,3 +22,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Bundled, offline fonts (SIL Open Font License 1.1; licences beside the
+  # files). All three cover the Turkish letters ÇĞİÖŞÜ çğıöşü.
+  fonts:
+    - family: OpenDyslexic
+      fonts:
+        - asset: assets/fonts/OpenDyslexic-Regular.otf
+        - asset: assets/fonts/OpenDyslexic-Bold.otf
+          weight: 700
+    - family: AtkinsonHyperlegibleNext
+      fonts:
+        - asset: assets/fonts/AtkinsonNext.ttf
+    - family: Lexend
+      fonts:
+        - asset: assets/fonts/Lexend.ttf

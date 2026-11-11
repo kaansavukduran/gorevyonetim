@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'l10n.dart';
+
 import 'package:flutter/services.dart';
 
 import 'themes.dart';
@@ -90,9 +93,9 @@ class _ColorPickerState extends State<_ColorPicker> {
           children: [
             Row(
               children: [
-                _sample('Önceki', widget.initial),
+                _sample(context.t('Önceki'), widget.initial),
                 const SizedBox(width: 12),
-                _sample('Seçilen', _color),
+                _sample(context.t('Seçilen'), _color),
               ],
             ),
             const SizedBox(height: 16),
@@ -105,7 +108,7 @@ class _ColorPickerState extends State<_ColorPicker> {
                     constraints.maxHeight,
                   );
                   return Semantics(
-                    label: 'Doygunluk ve parlaklık renk alanı',
+                    label: context.t('Doygunluk ve parlaklık renk alanı'),
                     child: GestureDetector(
                       key: const Key('color-plane'),
                       onPanDown: (d) => _position(d.localPosition, size),
@@ -178,7 +181,10 @@ class _ColorPickerState extends State<_ColorPicker> {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Renk tonu', style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              context.t('Renk tonu'),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             Stack(
               alignment: Alignment.center,
               children: [
@@ -221,7 +227,7 @@ class _ColorPickerState extends State<_ColorPicker> {
                 LengthLimitingTextInputFormatter(6),
               ],
               decoration: InputDecoration(
-                labelText: 'HEX renk kodu',
+                labelText: context.t('HEX renk kodu'),
                 prefixText: '#',
                 hintText: '3366FF',
                 border: const OutlineInputBorder(),
@@ -319,14 +325,14 @@ class _ColorPickerState extends State<_ColorPicker> {
         TextButton(
           key: const Key('color-cancel'),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Vazgeç'),
+          child: Text(context.t('Vazgeç')),
         ),
         FilledButton(
           key: const Key('color-confirm'),
           onPressed: _error != null
               ? null
               : () => Navigator.pop(context, _color),
-          child: const Text('Rengi kullan'),
+          child: Text(context.t('Rengi kullan')),
         ),
       ],
     );

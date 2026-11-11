@@ -4,9 +4,27 @@ Son çalışma: 9 Kasım 2026, 1.2.1 Android yedekleme güvenilirliği turu. Tek
 
 ## Çalışma durumu
 
-11 Kasım 2026: Claude (Claude Code) turu "1.3.0 dil ve erişilebilirlik" canlı çalışıyor: Türkçe/İngilizce arayüz ve dil seçimi, yazı tipi seçimi (disleksi dostu dahil), arayüz ölçeğinden bağımsız yazı boyutu, yüksek kontrast, Ayarlar kategorileri, Güncellemeler bölümü. Kilit 12 Kasım 2026 03.00 Europe/Istanbul'a kadar geçerli; başka tur kaynak koda dokunmasın. Codex'in 9 Kasım kilidi süresi dolmuş, kod gönderilmemişti; Aion ve diğer karakterler Drive referansları gerektirdiği için bu turda yok, sonraki tura bırakılır.
+Aktif kilit yok. Son tur: 11 Kasım 2026, Claude (Claude Code), 1.3.0 dil ve erişilebilirlik turu (aşağıda).
 
 Depo adı GitHub üzerinde `gorevyonetim` olarak değişmiş; sabit depo kimliği `1449667842` ile aynı hedef olduğu doğrulandı. Takip için kanonik yeni adres kullanılır.
+
+## 1.3.0 dil ve erişilebilirlik turu (Claude, 11 Kasım 2026)
+
+- [x] Türkçe/İngilizce arayüz: `L10n` (context.t) ve tek İngilizce tablo `lib/src/ui/l10n_en.dart`. Ayarlar → Genel ve Dil: Sistem / Türkçe / English; Sistem cihaz İngilizceyse English, değilse Türkçe. Seçim anında uygulanır, `ayarlar.json` içinde kalır. Tarihler, gün adları, tekrar kuralları, yüzdeler (%40 / 40%), unvanlar, rozetler, görevler tahtası, temalar ve sınıflar iki dilde. Kullanıcının yazdığı görev metni çevrilmez.
+- [x] Erişilebilirlik kartı: yazı tipi seçimi (sistem, Atkinson Hyperlegible Next, Lexend, "Disleksi dostu yazı tipi (OpenDyslexic)") örnek metinle; arayüz ölçeğinden bağımsız yazı boyutu %80–%200 (çubuk + elle giriş + %80/100/125/150/175/200 + varsayılana dön); yüksek kontrast (düz arka plan, tam kontrastlı yazı, belirgin kenar). Ayarlar birbirini değiştirmez.
+- [x] Yazı tipleri pakete gömülü, çevrimdışı; üçü de SIL OFL 1.1 (lisanslar `assets/fonts`). fontTools ile ÇĞİÖŞÜ çğıöşü kapsamı doğrulandı; ilk aday Atkinson Hyperlegible (ilk sürüm) İ harfi olmadığı için alınmadı.
+- [x] 166 test başarılı (yeni: çeviri tamlığı ve yer tutucular, sistem dili, İngilizce tarih/kural, ayar gidiş-dönüş ve bozuk değer, İngilizce ekran, dil değiştirme kalıcılığı, yazı tipi/yazı boyutu/kontrast, hazır yazı boyutları). Testler `test/flutter_test_config.dart` ile Türkçe cihaz varsayar. Sekiz mutasyon yakalandı (çeviriyi yok sayma, sistem dilini yok sayma, yazı boyutunu uygulamama, yazı tipini uygulamama, yüksek kontrast arka planı, dili kaydetmeme, İngilizce tarih sırası); yüksek kontrast arka planı ilk denemede kaçtı, testi güçlendirildi.
+- [x] Linux: gerçek dosya entegrasyonu ve fare/klavye duman testi geçti; İngilizce + OpenDyslexic ekran görüntüsü gerçek uygulamadan alındı.
+- Çeviri betiği metinleri otomatik sardı; sarılmamış tek tük Türkçe metin kalmış olabilir (ör. hata ayrıntıları). Görüldükçe sarılmalı.
+
+### Sıradaki işler (k44 talimatlarından kalanlar)
+
+1. Ayarlar → Güncellemeler: yüklü sürüm, "Güncellemeleri kontrol et" (GitHub Releases), sürüm notu, indirme bağlantısı. Otomatik kurulum için imzalı paket gerekir.
+2. Linux AppImage ve .deb; sürüm etiketlerinde son kararlı sürümü Latest, betaları Pre-release işaretleme.
+3. Aion maskotu (Aionlaştır): Drive referansları gerekiyor; bu oturumda Drive bağlantısı yoktu.
+4. Ayarlar arama ve kategori düzeni (Oyunlaştırma ve Bildirimler, Veri ve Yedekler, Hakkında), kullanıcı ayarlarının "bu cihaz" etiketi.
+5. iOS (Apple hesabı gerekir), Android kalıcı imza (repo secrets izni 403), macOS Developer ID ve Windows imzası: kullanıcı ayarı gerektiren engeller.
+6. Drive proje yedeği (Yazılım Geliştirme klasörü): Drive bağlantısı gerekiyor.
 
 ## 1.2.1 Android yedekleme turu
 
